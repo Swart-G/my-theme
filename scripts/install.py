@@ -10,8 +10,8 @@ import kde as k
 import controller as c
 STATE=Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-glass'
 IDS=['local.bart.modularpanel','local.bart.desktopnumbers','local.bart.systemmonitor','KdeControlStation']
-RPM_PACKAGES=['plasma-workspace','plasma-desktop','plasma-nm','plasma-pa','kdeplasma-addons','python3-pyside6','qt6-qttools','ksystemstats','libksysguard','kde-connect','qt6-qt5compat','qt6-qtdeclarative']
-CONFIG_NAMES=['kdeglobals','plasmarc','kwinrc','plasmashellrc','plasma-org.kde.plasma.desktop-appletsrc','kglobalshortcutsrc','autostart/bart-enhancement-layout.desktop','autostart/modular-glass-layout.desktop']
+RPM_PACKAGES=['plasma-workspace','plasma-desktop','plasma-nm','plasma-pa','kdeplasma-addons','python3-pyside6','qt6-qttools','ksystemstats','libksysguard','kde-connect','qt6-qt5compat','qt6-qtdeclarative','konsole','fish','fastfetch']
+CONFIG_NAMES=['kdeglobals','plasmarc','kwinrc','plasmashellrc','plasma-org.kde.plasma.desktop-appletsrc','kglobalshortcutsrc','autostart/bart-enhancement-layout.desktop','autostart/modular-glass-layout.desktop','konsolerc','fish/conf.d/rodip-glass.fish','autostart/rodip-style.desktop']
 def run(args,**kwargs):
  result=subprocess.run([str(x) for x in args],capture_output=True,text=True,**kwargs)
  if result.returncode:raise RuntimeError(result.stderr.strip() or result.stdout.strip() or f'{args[0]} failed')
@@ -39,7 +39,7 @@ def check(dependencies=False,desktop_only=False):
  if len(version)<2 or version[0]!=6 or version[1]<7:raise RuntimeError('Нужна активная сессия KDE Plasma 6.7 или новее в ветке 6.x.')
  return {'ready':True,'plasma':probe['version'],'qt':qVersion(),'screens':probe['screens'],'missing_packages':[]}
 def managed():
- return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass']
+ return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'rodip-style',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
 def snapshot(destination,paths):
  destination.mkdir(parents=True,mode=0o700)
  items=[]
@@ -176,6 +176,8 @@ def apply(args):
    (k.STATE/'report.json').write_text(json.dumps({'mode':'apply','version':3,'options':opts},indent=2))
    auto=k.CONFIG/'autostart/bart-enhancement-layout.desktop';auto.parent.mkdir(parents=True,exist_ok=True)
    auto.write_text('[Desktop Entry]\nType=Application\nName=Rodip Glass panel recovery\nOnlyShowIn=KDE;\nExec=python3 '+json.dumps(str(k.DATA/'bart-enhancement/scripts/layout-watch.py'),ensure_ascii=False)+'\n')
+   run([sys.executable,ROOT/'scripts/finish-style.py','--apply'])
+   subprocess.Popen([sys.executable,str(k.DATA/'rodip-style/finish-style.py'),'--watch'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
    start_watch()
    if not args.desktop_only:
     print('Установка экрана входа SDDM: может потребоваться системный пароль администратора.',flush=True)

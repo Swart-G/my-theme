@@ -32,6 +32,28 @@ PlasmoidItem {
         function onScreenGeometryChanged() { root.updateCurrentDesktop(); }
     }
     fullRepresentation: Item {
+    // Accumulate high-resolution wheel ticks; one notch switches one desktop.
+    WheelHandler {
+        target: null
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        property real remainder: 0
+        onWheel: event => {
+            const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+            if (delta === 0) return;
+            event.accepted = true;
+            remainder += delta;
+            const steps = Math.trunc(remainder / 120);
+            if (steps === 0) return;
+            remainder -= steps * 120;
+            const ids = desktops.desktopIds;
+            const currentIndex = ids.indexOf(root.currentDesktopId);
+            if (currentIndex < 0 || ids.length < 2) return;
+            const next = Math.max(0, Math.min(ids.length - 1, currentIndex + steps));
+            if (next === currentIndex) return;
+            DBus.SessionBus.asyncCall({service: "org.kde.KWin", path: "/KWin", iface: "org.kde.KWin", member: "setCurrentDesktop", arguments: [new DBus.int32(next + 1)]});
+        }
+    }
+
         implicitWidth: desktops.numberOfDesktops * 28 - 4
         implicitHeight: 24
         Row {

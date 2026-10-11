@@ -51,6 +51,25 @@ class InstallationTests(unittest.TestCase):
    source=Path(temp)
    for name in ['Main.qml','GlassPanel.qml','metadata.desktop','theme.conf','secret']:(source/name).write_text('data')
    with self.assertRaises(RuntimeError):system.install(source)
+ def test_wallpaper_decoration_works_without_installed_bart_and_preserves_source(self):
+  spec=importlib.util.spec_from_file_location('finish_style',ROOT/'scripts/finish-style.py')
+  style=importlib.util.module_from_spec(spec);spec.loader.exec_module(style)
+  with tempfile.TemporaryDirectory() as temp:
+   base=Path(temp);data=base/'data';state=base/'state';state.mkdir()
+   import shutil
+   source=data/'rodip-style/decoration-source'
+   shutil.copytree(ROOT/'terminal/decoration-source',source)
+   original=(source/'decoration.svg').read_bytes()
+   with patch.object(style,'DATA',data),patch.object(style,'STATE',state),patch.object(style,'accent',return_value='#123456'),patch.object(style,'key') as key,patch.object(style,'run'):
+    style.sync()
+    self.assertEqual((source/'decoration.svg').read_bytes(),original)
+    generated=data/'aurorae/themes/Bart-Wallpaper-A'
+    self.assertIn('#123456',(generated/'decoration.svg').read_text())
+    self.assertNotIn('#d95a3c',(generated/'decoration.svg').read_text())
+    self.assertTrue((generated/'Bart-Wallpaper-Arc').exists())
+    style.sync();self.assertEqual(key.call_count,1)
+    with patch.object(style,'accent',return_value='#654321'):style.sync()
+    self.assertTrue((data/'aurorae/themes/Bart-Wallpaper-B/decoration.svg').exists())
  def test_bundle_does_not_require_machine_paths_or_native_binary(self):
   for path in ROOT.rglob('*'):
    if not path.is_file() or '.git' in path.parts or path.relative_to(ROOT).parts[0]=='tests':continue
