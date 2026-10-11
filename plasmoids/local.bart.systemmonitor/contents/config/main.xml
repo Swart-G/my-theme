@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0">
+ <kcfgfile name=""/>
+ <group name="General">
+  <entry name="showCpu" type="Bool"><default>true</default></entry>
+  <entry name="showMemory" type="Bool"><default>true</default></entry>
+  <entry name="swapSensor" type="String"><default></default></entry>
+  <entry name="temperatureSensor" type="String"><default></default></entry>
+  <entry name="gpuSensor" type="String"><default></default></entry>
+  <entry name="showNetwork" type="Bool"><default>true</default></entry>
+  <entry name="refreshMs" type="Int"><default>1500</default></entry>
+ </group>
+</kcfg>

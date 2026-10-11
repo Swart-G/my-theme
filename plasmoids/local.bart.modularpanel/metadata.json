@@ -1,0 +1,11 @@
+{
+  "KPackageStructure": "Plasma/Applet",
+  "KPlugin": {
+    "Id": "local.bart.modularpanel", "Name": "Bart Modular Control Panel",
+    "Name[ru]": "Модульная панель управления Bart",
+    "Description": "Adaptive native Plasma containment", "Icon": "preferences-desktop",
+    "Version": "2.0", "License": "MIT", "Authors": [{"Name": "Bart Enhancement contributors"}]
+  },
+  "X-Plasma-API-Minimum-Version": "6.0",
+  "X-Plasma-ContainmentType": "Panel"
+}

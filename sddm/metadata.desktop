@@ -1,0 +1,13 @@
+[SddmGreeterTheme]
+Name=Rodip Glass
+Description=Matte glass login matching the Plasma panel
+Author=Rodip
+License=MIT
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=rodip-glass
+Theme-API=2.0
+QtVersion=6
+Screenshot=

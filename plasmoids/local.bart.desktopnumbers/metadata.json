@@ -1,0 +1,5 @@
+{
+ "KPackageStructure": "Plasma/Applet",
+ "KPlugin": {"Id": "local.bart.desktopnumbers", "Name": "Desktop Numbers", "Name[ru]": "Номера рабочих столов", "Icon": "preferences-desktop-virtual", "Version": "2.0", "License": "MIT", "Category": "Windows and Tasks", "Authors": [{"Name": "Bart Enhancement contributors"}]},
+ "X-Plasma-API-Minimum-Version": "6.0"
+}

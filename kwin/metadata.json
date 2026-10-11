@@ -1,0 +1,4 @@
+{
+ "KPlugin": {"Id": "bart-modular-control", "Name": "Bart Modular Control", "Description": "Per-output maximization and fullscreen panel state", "Version": "2.0", "License": "MIT", "Authors": [{"Name": "Bart Enhancement contributors"}]},
+ "KPackageStructure": "KWin/Script", "X-Plasma-API": "javascript", "X-Plasma-MainScript": "code/main.js"
+}

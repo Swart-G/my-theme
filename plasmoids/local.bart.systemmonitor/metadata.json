@@ -1,0 +1,15 @@
+{
+  "KPackageStructure": "Plasma/Applet",
+  "KPlugin": {
+    "Id": "local.bart.systemmonitor",
+    "Name": "Bart Resource Monitor",
+    "Name[ru]": "Монитор ресурсов Bart",
+    "Description": "Native KSystemStats sensors with reactive KDE colors",
+    "Icon": "utilities-system-monitor",
+    "Version": "1.0",
+    "License": "MIT",
+    "Authors": [{"Name": "Bart Enhancement contributors"}],
+    "Category": "System Information"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0"
+}
