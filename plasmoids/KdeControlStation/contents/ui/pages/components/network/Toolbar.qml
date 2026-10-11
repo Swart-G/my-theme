@@ -174,25 +174,18 @@ RowLayout {
 
         PlasmaComponents3.ToolTip {
             id: tooltip
+            text: handler.hotspotActive ? i18n("Disable Hotspot") : i18n("Create Hotspot")
         }
 
         Connections {
             target: handler
-            function onHotspotCreated() {
-                hotspotButton.checked = true
-                tooltip.text = i18n("Disable Hotspot")
-            }
-
-            function onHotspotDisabled() {
-                hotspotButton.checked = false
-                tooltip.text = i18n("Create Hotspot")
+            function onHotspotActiveChanged() {
+                hotspotButton.checked = handler.hotspotActive
             }
         }
 
-        Component.onCompleted: {
-            checked = PlasmaNM.Configuration.hotspotConnectionPath
-            tooltip.text = PlasmaNM.Configuration.hotspotConnectionPath ? i18n("Disable Hotspot") : i18n("Create Hotspot")
-        }
+        Component.onCompleted: checked = handler.hotspotActive
+
     }
 
     PlasmaExtras.SearchField {

@@ -122,11 +122,11 @@ PlasmoidItem {
         id: executable
         engine: "executable"
         connectedSources: ["plasmashell -v"]
-        onNewData: {
+        onNewData: (sourceName, data) => {
             if(data["exit code"] == 0){
                 plasmaVersion = data.stdout.split(" ")[1].split(".")[1];
             }
-            disconnectSource(connectedSources)
+            disconnectSource(sourceName)
         }
     }
     

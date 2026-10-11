@@ -240,10 +240,12 @@ PlasmaExtras.ExpandableListItem {
         property double prevRxBytes: 0
         property double prevTxBytes: 0
         onTriggered: {
-            rxSpeed = prevRxBytes === 0 ? 0 : (RxBytes - prevRxBytes) * 1000 / interval
-            txSpeed = prevTxBytes === 0 ? 0 : (TxBytes - prevTxBytes) * 1000 / interval
-            prevRxBytes = RxBytes
-            prevTxBytes = TxBytes
+            const rxBytes = Number(RxBytes) || 0
+            const txBytes = Number(TxBytes) || 0
+            rxSpeed = prevRxBytes === 0 ? 0 : Math.max(0, rxBytes - prevRxBytes) * 1000 / interval
+            txSpeed = prevTxBytes === 0 ? 0 : Math.max(0, txBytes - prevTxBytes) * 1000 / interval
+            prevRxBytes = rxBytes
+            prevTxBytes = txBytes
         }
     }
 

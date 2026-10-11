@@ -78,6 +78,8 @@ def apply():
  greeting=CONFIG/'fish/conf.d/rodip-glass.fish';greeting.parent.mkdir(parents=True,exist_ok=True)
  greeting.write_text('''# Rodip Glass: only interactive Konsole shells; no login-shell changes.
 if status is-interactive; and set -q KONSOLE_VERSION
+    # Explicit RGB avoids the nearly black ANSI bright-black palette entry.
+    set -g fish_color_autosuggestion a3ad9e
     function fish_greeting
         if type -q fastfetch
             fastfetch --structure Title:Separator:OS:Kernel:Uptime:Shell:DE:Terminal:CPU:GPU:Memory:Disk:Break:Colors

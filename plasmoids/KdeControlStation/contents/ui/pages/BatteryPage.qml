@@ -105,7 +105,11 @@ PageTemplate {
         remainingTime: batteryControl.remainingTime
         activeProfile: powerProfilesControl.activeProfile
         activeProfileError: powerProfilesControl.profileError
-        inhibitions: inhibitionControl.inhibitions
+        // Plasma 6.7 exposes typed requested inhibitions, including inactive ones.
+        inhibitions: inhibitionControl.requestedInhibitions
+            .filter(item => item.active)
+            .map(item => ({Icon: item.icon, PrettyName: item.prettyName,
+                           Name: item.appName, Reason: item.reason}))
         inhibitsLidAction: inhibitionControl.isLidPresent && !inhibitionControl.triggersLidAction
         profilesInstalled: powerProfilesControl.isPowerProfileDaemonInstalled
         profiles: powerProfilesControl.profiles
