@@ -1,0 +1,13 @@
+[kdeglobals][General]
+ColorScheme=RodipGlass
+accentColorFromWallpaper=true
+
+[plasmarc][Theme]
+name=zhelly0-glass
+
+[plasmashellrc][Shell]
+ShellPackage=org.rodip.glass.shell
+
+[kwinrc][org.kde.kdecoration2]
+library=org.kde.kwin.aurorae.v2
+theme=__aurorae__svg__Bart-Wallpaper-A

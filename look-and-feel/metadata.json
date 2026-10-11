@@ -1,0 +1,15 @@
+{
+  "KPackageStructure": "Plasma/LookAndFeel",
+  "KPlugin": {
+    "Id": "org.rodip.glass.desktop",
+    "Name": "Rodip Glass",
+    "Description": "Modular glass panel, wallpaper accent, glass Konsole and native KDE lock screen",
+    "Description[ru]": "Модульная стеклянная панель, акцент обоев, стеклянный Konsole и экран блокировки KDE",
+    "Version": "1.2",
+    "License": "GPL-3.0",
+    "Authors": [{"Name": "Rodip"}],
+    "Website": "https://github.com/Swart-G/my-theme",
+    "Category": "Global Themes (Plasma 6)"
+  },
+  "X-Plasma-APIVersion": "2"
+}

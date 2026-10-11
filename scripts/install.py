@@ -40,7 +40,7 @@ def check(dependencies=False,desktop_only=False):
  if len(version)<2 or version[0]!=6 or version[1]<7:raise RuntimeError('Нужна активная сессия KDE Plasma 6.7 или новее в ветке 6.x.')
  return {'ready':True,'plasma':probe['version'],'qt':qVersion(),'screens':probe['screens'],'missing_packages':[]}
 def managed():
- return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'plasma/shells'/lockscreen.IDENT,k.DATA/'rodip-style',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
+ return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'plasma/look-and-feel/org.rodip.glass.desktop',k.DATA/'plasma/shells'/lockscreen.IDENT,k.DATA/'rodip-style',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
 def snapshot(destination,paths):
  destination.mkdir(parents=True,mode=0o700)
  items=[]
@@ -94,6 +94,7 @@ def cpu_model():
 def options():
  return {'height':36,'edge_margin':6,'date_format':'ddd, d MMM','refresh_ms':1500,'show_network':True,'show_gpu':True,'cpu_model':cpu_model(),'has_battery':any(Path('/sys/class/power_supply').glob('BAT*'))}
 def copy_packages():
+ shutil.copytree(ROOT/'look-and-feel',k.DATA/'plasma/look-and-feel/org.rodip.glass.desktop',dirs_exist_ok=True)
  for ident in IDS:
   dest=k.DATA/'plasma/plasmoids'/ident
   if dest.exists():shutil.rmtree(dest)
@@ -166,7 +167,8 @@ def apply(args):
    lockscreen.build(k.DATA)
    k.write_key(k.CONFIG/'plasmashellrc','[Shell]','ShellPackage',lockscreen.IDENT)
    image=wallpaper()
-   if image:k.write_key(k.CONFIG/'kscreenlockerrc','[Greeter][Wallpaper][org.kde.image][General]','Image',image)
+   if image:
+    for name in ['Image','PreviewImage']:k.write_key(k.CONFIG/'kscreenlockerrc','[Greeter][Wallpaper][org.kde.image][General]',name,image.as_uri())
    restart_shell();k.desktops();opts=options();k.STATE.mkdir(parents=True,exist_ok=True)
    layout=c.create_layout(opts);expected_ids=[p['id'] for p in layout];k.dbus('org.kde.KWin','/KWin','reconfigure');c.reload_kwin_script()
    try:k.dbus('org.kde.KWin','/Effects','org.kde.kwin.Effects.loadEffect','blur')
@@ -184,12 +186,20 @@ def apply(args):
    run([sys.executable,ROOT/'scripts/finish-style.py','--apply'])
    subprocess.Popen([sys.executable,str(k.DATA/'rodip-style/finish-style.py'),'--watch'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
    start_watch()
+   run(['plasma-apply-lookandfeel','--apply','org.rodip.glass.desktop'])
+   k.write_key(k.CONFIG/'kdeglobals','[KDE]','DefaultDarkLookAndFeel','org.rodip.glass.desktop')
+   screens={'lockscreen': {'package':lockscreen.IDENT,'installed':True},'login':{'installed':False,'reason':'desktop-only' if args.desktop_only else 'awaiting-system-install'}}
+   report={'backup':str(backup),'system':status,'desktop_only':args.desktop_only,'panels':[p['id'] for p in panels],'screens':screens,'global_theme':'org.rodip.glass.desktop'}
+   (STATE/'report.json').write_text(json.dumps(report,indent=2))
    if not args.desktop_only:
     print('Установка экрана входа SDDM: может потребоваться системный пароль администратора.',flush=True)
     result=elevated([sys.executable,ROOT/'scripts/system-install.py','--source',prepare_sddm()])
-    (backup/'sddm.json').write_text(json.dumps(json.loads(result),indent=2))
-   (STATE/'report.json').write_text(json.dumps({'backup':str(backup),'system':status,'desktop_only':args.desktop_only,'panels':[p['id'] for p in panels]},indent=2))
-   print('Готово. Панель применена.' + ('' if args.desktop_only else ' Экран входа SDDM применяется при следующем запуске SDDM.'),flush=True)
+    receipt=json.loads(result)
+    (backup/'sddm.json').write_text(json.dumps(receipt,indent=2))
+    screens['login']={'installed':True,'theme':'rodip-glass','config':receipt['config']}
+    print('Экран входа SDDM установлен. Активный сеанс не перезапускается.',flush=True)
+   (STATE/'report.json').write_text(json.dumps(report,indent=2))
+   print('Готово. Глобальная тема и экран блокировки установлены.' + (' Экран входа SDDM пропущен: --desktop-only.' if args.desktop_only else ' Экран входа SDDM применяется при следующем запуске SDDM.'),flush=True)
   except BaseException as error:
    (backup/'failure.txt').write_text(str(error))
    print('Установка не завершена. Резервная копия сохранена: '+str(backup)+'\nДля точного отката: install.sh --restore из TTY.',file=sys.stderr)

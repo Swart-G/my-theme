@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Wallpaper-accent Aurorae extension and glass Konsole; never edits Bart."""
-import argparse, configparser, hashlib, json, os, shutil, subprocess, sys
+import argparse, configparser, hashlib, json, os, re, shutil, subprocess, sys
 from pathlib import Path
 HOME=Path.home(); CONFIG=Path(os.environ.get('XDG_CONFIG_HOME',HOME/'.config')); DATA=Path(os.environ.get('XDG_DATA_HOME',HOME/'.local/share')); STATE=Path(os.environ.get('XDG_STATE_HOME',HOME/'.local/state'))/'rodip-style'
 FILES=[CONFIG/'kwinrc',CONFIG/'konsolerc',CONFIG/'fish/conf.d/rodip-glass.fish',DATA/'konsole/RodipGlass.profile',DATA/'konsole/RodipGlass.colorscheme',CONFIG/'autostart/rodip-style.desktop']
@@ -22,10 +22,17 @@ def accent():
  rgb=p.get('General','AccentColor',fallback=p.get('Colors:Selection','BackgroundNormal',fallback='109,121,60'))
  return '#'+''.join(f'{int(v):02x}' for v in rgb.split(',')[:3])
 
+def update_theme_defaults(variant):
+ defaults=DATA/'plasma/look-and-feel/org.rodip.glass.desktop/contents/defaults'
+ if defaults.exists():
+  original=defaults.read_text();updated=re.sub(r'__aurorae__svg__Bart-Wallpaper-[AB]', '__aurorae__svg__Bart-Wallpaper-'+variant,original)
+  if original!=updated:defaults.write_text(updated)
+
 def sync():
  color=accent(); stamp=STATE/'accent.json'
  old=json.loads(stamp.read_text()) if stamp.exists() else {}
- if old.get('color')==color:return
+ if old.get('color')==color:
+  update_theme_defaults(old['variant']);return
  variant='B' if old.get('variant')=='A' else 'A'; name='Bart-Wallpaper-'+variant
  src=DATA/'aurorae/themes/Bart'
  if not src.exists():src=DATA/'rodip-style/decoration-source'
@@ -43,6 +50,7 @@ def sync():
  key(CONFIG/'kwinrc','org.kde.kdecoration2','theme','__aurorae__svg__'+name)
  dbus('org.kde.KWin','/KWin','reconfigure')
  stamp.write_text(json.dumps({'color':color,'variant':variant}))
+ update_theme_defaults(variant)
  print('Decoration accent:',color,flush=True)
 
 def apply():

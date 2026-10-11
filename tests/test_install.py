@@ -91,6 +91,15 @@ class InstallationTests(unittest.TestCase):
    self.assertIn('authenticator.respond', (package/'contents/lockscreen/LockScreenUi.qml').read_text())
    self.assertIn('sessionManager.startLogin()',main)
    self.assertIn('data: [Rectangle',main)
+ def test_global_theme_has_native_metadata_defaults_and_preview(self):
+  package=ROOT/'look-and-feel';metadata=json.loads((package/'metadata.json').read_text())
+  self.assertEqual(metadata['KPackageStructure'],'Plasma/LookAndFeel')
+  self.assertEqual(metadata['KPlugin']['Id'],'org.rodip.glass.desktop')
+  defaults=(package/'contents/defaults').read_text()
+  self.assertIn('ShellPackage=org.rodip.glass.shell',defaults)
+  self.assertIn('ColorScheme=RodipGlass',defaults)
+  self.assertNotIn('[Wallpaper]',defaults)
+  self.assertTrue((package/'contents/previews/preview.png').is_file())
  def test_bundle_does_not_require_machine_paths_or_native_binary(self):
   for path in ROOT.rglob('*'):
    if not path.is_file() or '.git' in path.parts or path.relative_to(ROOT).parts[0]=='tests':continue
