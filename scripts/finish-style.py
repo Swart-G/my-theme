@@ -11,6 +11,12 @@ def run(*args):
 def key(file,group,name,value):
  run('kwriteconfig6','--file',str(file),'--group',group,'--key',name,str(value))
 
+def dbus(*args):
+ # Fedora ships Qt6 tools outside PATH on some installations.
+ executable=next((str(p) for p in [Path('/usr/lib64/qt6/bin/qdbus'),Path('/usr/lib/qt6/bin/qdbus')] if p.is_file()),shutil.which('qdbus6') or shutil.which('qdbus'))
+ if not executable:raise RuntimeError('Не найден qdbus Qt6; установите qt6-qttools.')
+ return run(executable,*args)
+
 def accent():
  p=configparser.ConfigParser(interpolation=None);p.read(CONFIG/'kdeglobals')
  rgb=p.get('General','AccentColor',fallback=p.get('Colors:Selection','BackgroundNormal',fallback='109,121,60'))
@@ -35,7 +41,7 @@ def sync():
    obj=json.loads(f.read_text());obj['KPlugin']['Id']=name;obj['KPlugin']['Name']='Bart · Wallpaper accent';f.write_text(json.dumps(obj,indent=2))
   else:f.write_text(f.read_text().replace('Name=Bart','Name='+name).replace('X-KDE-PluginInfo-Name=Bart','X-KDE-PluginInfo-Name='+name))
  key(CONFIG/'kwinrc','org.kde.kdecoration2','theme','__aurorae__svg__'+name)
- run('qdbus','org.kde.KWin','/KWin','reconfigure')
+ dbus('org.kde.KWin','/KWin','reconfigure')
  stamp.write_text(json.dumps({'color':color,'variant':variant}))
  print('Decoration accent:',color,flush=True)
 
@@ -77,7 +83,7 @@ end
  auto.write_text('[Desktop Entry]\nType=Application\nName=Wallpaper Window Accent\nExec=/usr/bin/python3 '+str(installed)+' --watch\nOnlyShowIn=KDE;\n')
  key(CONFIG/'kwinrc','Plugins','blurEnabled','true')
  sync()
- run('qdbus','org.kde.KWin','/Effects','loadEffect','blur')
+ dbus('org.kde.KWin','/Effects','loadEffect','blur')
  print('Glass profile applied. Backup:',STATE)
 
 def watch():
@@ -101,7 +107,7 @@ def restore():
   if existed:shutil.copy2(STATE/str(i),p)
   else:p.unlink(missing_ok=True)
  for variant in ['A','B']:shutil.rmtree(DATA/'aurorae/themes'/('Bart-Wallpaper-'+variant),ignore_errors=True)
- run('qdbus','org.kde.KWin','/KWin','reconfigure')
+ dbus('org.kde.KWin','/KWin','reconfigure')
  print('Restored saved configuration.')
 
 if __name__=='__main__':

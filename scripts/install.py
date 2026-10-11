@@ -8,10 +8,11 @@ ROOT=Path(__file__).resolve().parents[1]
 os.environ['BART_ENHANCEMENT_ROOT']=str(ROOT)
 import kde as k
 import controller as c
+import lockscreen
 STATE=Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-glass'
 IDS=['local.bart.modularpanel','local.bart.desktopnumbers','local.bart.systemmonitor','KdeControlStation']
 RPM_PACKAGES=['plasma-workspace','plasma-desktop','plasma-nm','plasma-pa','kdeplasma-addons','python3-pyside6','qt6-qttools','ksystemstats','libksysguard','kde-connect','qt6-qt5compat','qt6-qtdeclarative','konsole','fish','fastfetch']
-CONFIG_NAMES=['kdeglobals','plasmarc','kwinrc','plasmashellrc','plasma-org.kde.plasma.desktop-appletsrc','kglobalshortcutsrc','autostart/bart-enhancement-layout.desktop','autostart/modular-glass-layout.desktop','konsolerc','fish/conf.d/rodip-glass.fish','autostart/rodip-style.desktop']
+CONFIG_NAMES=['kdeglobals','plasmarc','kwinrc','plasmashellrc','plasma-org.kde.plasma.desktop-appletsrc','kglobalshortcutsrc','autostart/bart-enhancement-layout.desktop','autostart/modular-glass-layout.desktop','konsolerc','kscreenlockerrc','fish/conf.d/rodip-glass.fish','autostart/rodip-style.desktop']
 def run(args,**kwargs):
  result=subprocess.run([str(x) for x in args],capture_output=True,text=True,**kwargs)
  if result.returncode:raise RuntimeError(result.stderr.strip() or result.stdout.strip() or f'{args[0]} failed')
@@ -39,7 +40,7 @@ def check(dependencies=False,desktop_only=False):
  if len(version)<2 or version[0]!=6 or version[1]<7:raise RuntimeError('Нужна активная сессия KDE Plasma 6.7 или новее в ветке 6.x.')
  return {'ready':True,'plasma':probe['version'],'qt':qVersion(),'screens':probe['screens'],'missing_packages':[]}
 def managed():
- return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'rodip-style',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
+ return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'plasma/shells'/lockscreen.IDENT,k.DATA/'rodip-style',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
 def snapshot(destination,paths):
  destination.mkdir(parents=True,mode=0o700)
  items=[]
@@ -64,8 +65,8 @@ def restore_files(backup,paths):
    if item['directory']:shutil.copytree(backup/item['copy'],path)
    else:shutil.copy2(backup/item['copy'],path)
 def stop_watchers():
- for project in ['bart-enhancement','modular-glass']:
-  watch=k.DATA/project/'scripts/layout-watch.py'
+ for project,name in [('bart-enhancement','layout-watch.py'),('modular-glass','layout-watch.py'),('rodip-style','finish-style.py')]:
+  watch=k.DATA/project/name
   for pid in subprocess.run(['pgrep','-u',str(os.getuid()),'-f',str(watch)],capture_output=True,text=True).stdout.split():
    try:
     if str(watch).encode() in (Path('/proc')/pid/'cmdline').read_bytes().split(b'\0'):os.kill(int(pid),signal.SIGTERM)
@@ -162,6 +163,10 @@ def apply(args):
    for key,value in [('BlurStrength',8),('NoiseStrength',3)]:k.write_key(k.CONFIG/'kwinrc','[Effect-blur]',key,value)
    k.write_key(k.CONFIG/'kwinrc','[Plugins]','blurEnabled','true')
    k.write_key(k.CONFIG/'kwinrc','[Plugins]','bart-modular-controlEnabled','true')
+   lockscreen.build(k.DATA)
+   k.write_key(k.CONFIG/'plasmashellrc','[Shell]','ShellPackage',lockscreen.IDENT)
+   image=wallpaper()
+   if image:k.write_key(k.CONFIG/'kscreenlockerrc','[Greeter][Wallpaper][org.kde.image][General]','Image',image)
    restart_shell();k.desktops();opts=options();k.STATE.mkdir(parents=True,exist_ok=True)
    layout=c.create_layout(opts);expected_ids=[p['id'] for p in layout];k.dbus('org.kde.KWin','/KWin','reconfigure');c.reload_kwin_script()
    try:k.dbus('org.kde.KWin','/Effects','org.kde.kwin.Effects.loadEffect','blur')

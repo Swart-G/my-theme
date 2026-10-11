@@ -70,6 +70,27 @@ class InstallationTests(unittest.TestCase):
     style.sync();self.assertEqual(key.call_count,1)
     with patch.object(style,'accent',return_value='#654321'):style.sync()
     self.assertTrue((data/'aurorae/themes/Bart-Wallpaper-B/decoration.svg').exists())
+ def test_accent_helper_finds_fedora_qdbus_outside_path(self):
+  spec=importlib.util.spec_from_file_location('finish_style',ROOT/'scripts/finish-style.py')
+  style=importlib.util.module_from_spec(spec);spec.loader.exec_module(style)
+  with patch.object(style.Path,'is_file',side_effect=lambda:True),patch.object(style.shutil,'which',return_value=None),patch.object(style,'run',return_value='ok') as run:
+   self.assertEqual(style.dbus('org.kde.KWin','/KWin','reconfigure'),'ok')
+   self.assertEqual(run.call_args.args[0],'/usr/lib64/qt6/bin/qdbus')
+  with patch.object(style.Path,'is_file',return_value=False),patch.object(style.shutil,'which',return_value=None):
+   with self.assertRaisesRegex(RuntimeError,'qt6-qttools'):style.dbus('org.kde.KWin')
+ def test_locker_reuses_native_authentication_and_shell_fallback(self):
+  import lockscreen
+  with tempfile.TemporaryDirectory() as temp:
+   package=lockscreen.build(Path(temp))
+   metadata=json.loads((package/'metadata.json').read_text())
+   self.assertEqual(metadata['X-Plasma-FallbackPackage'],'org.kde.plasma.desktop')
+   native=Path('/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen')
+   for name in ['LockScreen.qml','LockScreenUi.qml','PasswordSync.qml','NoPasswordUnlock.qml']:
+    self.assertEqual((package/'contents/lockscreen'/name).read_bytes(),(native/name).read_bytes())
+   main=(package/'contents/lockscreen/MainBlock.qml').read_text()
+   self.assertIn('authenticator.respond', (package/'contents/lockscreen/LockScreenUi.qml').read_text())
+   self.assertIn('sessionManager.startLogin()',main)
+   self.assertIn('data: [Rectangle',main)
  def test_bundle_does_not_require_machine_paths_or_native_binary(self):
   for path in ROOT.rglob('*'):
    if not path.is_file() or '.git' in path.parts or path.relative_to(ROOT).parts[0]=='tests':continue

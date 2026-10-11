@@ -148,3 +148,19 @@ MIT-уведомления; Glass Panel и KDE Control Station — GPL-3.0.
 Установщик также создаёт декорацию рамок с акцентом обоев и стеклянный профиль
 Konsole (fish + fastfetch, прозрачность 24%, размытие). Оригинальная Bart
 не изменяется. Подробности и отдельный откат: [terminal/README.md](terminal/README.md).
+
+## Экран после сна и исправление qdbus
+
+Экран блокировки Plasma настраивается отдельно от SDDM. Установщик создаёт
+пакет Plasma/Shell `org.rodip.glass.shell` с резервным пакетом штатного рабочего
+стола: он добавляет только стеклянную карточку к установленному экрану блокировки
+Plasma 6.7 и сохраняет его код авторизации. Обои берутся с основного рабочего стола.
+Настройки включены в общий откат; глобальная тема Bart не заменяется.
+
+Все вызовы нового модуля оформления находят Qt6 qdbus по полному пути Fedora
+(`/usr/lib64/qt6/bin/qdbus`), затем проверяют qdbus6/qdbus в PATH.
+После обновления повторите обычную команду установки из начала README.
+
+Механизм пакета и резервного рабочего стола проверен по исходникам KDE:
+[ShellPackage](https://github.com/KDE/libplasma/blob/Plasma/6.7/src/plasma/packagestructure/shell/shellpackage.cpp),
+[ShellIntegration](https://github.com/KDE/kscreenlocker/blob/Plasma/6.7/settings/shell_integration.cpp).
