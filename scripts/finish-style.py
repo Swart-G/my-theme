@@ -4,6 +4,44 @@ import argparse, configparser, hashlib, json, os, re, shutil, subprocess, sys
 from pathlib import Path
 HOME=Path.home(); CONFIG=Path(os.environ.get('XDG_CONFIG_HOME',HOME/'.config')); DATA=Path(os.environ.get('XDG_DATA_HOME',HOME/'.local/share')); STATE=Path(os.environ.get('XDG_STATE_HOME',HOME/'.local/state'))/'rodip-style'
 FILES=[CONFIG/'kwinrc',CONFIG/'konsolerc',CONFIG/'fish/conf.d/rodip-glass.fish',DATA/'konsole/RodipGlass.profile',DATA/'konsole/RodipGlass.colorscheme',CONFIG/'autostart/rodip-style.desktop']
+FISH_CONFIG='''# Rodip Glass: readable RGB colors in interactive fish shells.
+if status is-interactive
+    # Apply again before prompts: config.fish and terminal theme detection
+    # can otherwise overwrite conf.d colors after startup.
+    function __rodip_glass_palette --on-event fish_prompt
+        set -g fish_color_normal e4e9e0
+        set -g fish_color_command a3b974
+        set -g fish_color_keyword b597be
+        set -g fish_color_param e4e9e0
+        set -g fish_color_quote dabf80
+        set -g fish_color_redirection 87b0c0
+        set -g fish_color_end 80bdae
+        set -g fish_color_error ff9b91
+        set -g fish_color_comment b5bfb0
+        set -g fish_color_autosuggestion b5bfb0
+        set -g fish_color_operator 87b0c0
+        set -g fish_color_escape b597be
+        set -g fish_color_cwd a3b974
+        set -g fish_color_cwd_root ff9b91
+        set -g fish_color_valid_path --underline
+        set -g fish_color_search_match e4e9e0 --background=414b3c
+        set -g fish_color_selection e4e9e0 --background=414b3c
+        set -g fish_pager_color_prefix 80bdae --bold
+        set -g fish_pager_color_completion e4e9e0
+        set -g fish_pager_color_description b5bfb0
+        set -g fish_pager_color_progress e4e9e0 --background=414b3c
+        set -g fish_pager_color_selected_background --background=414b3c
+    end
+    __rodip_glass_palette
+    if set -q KONSOLE_VERSION
+        function fish_greeting
+            if type -q fastfetch
+                fastfetch --structure Title:Separator:OS:Kernel:Uptime:Shell:DE:Terminal:CPU:GPU:Memory:Disk:Break:Colors
+            end
+        end
+    end
+end
+'''
 
 def run(*args):
  return subprocess.run(args,check=True,text=True,capture_output=True).stdout
@@ -76,17 +114,7 @@ def apply():
  (terminal/'RodipGlass.profile').write_text('[General]\nName=Rodip Glass\nParent=FALLBACK/\nCommand=/usr/bin/fish\nTerminalColumns=110\nTerminalRows=30\nTerminalMargin=14\nShowTerminalSizeHint=false\n\n[Appearance]\nColorScheme=RodipGlass\nAntiAliasFonts=true\n\n[Scrolling]\nHistoryMode=1\nHistorySize=10000\nScrollBarPosition=2\n')
  key(CONFIG/'konsolerc','Desktop Entry','DefaultProfile','RodipGlass.profile')
  greeting=CONFIG/'fish/conf.d/rodip-glass.fish';greeting.parent.mkdir(parents=True,exist_ok=True)
- greeting.write_text('''# Rodip Glass: only interactive Konsole shells; no login-shell changes.
-if status is-interactive; and set -q KONSOLE_VERSION
-    # Explicit RGB avoids the nearly black ANSI bright-black palette entry.
-    set -g fish_color_autosuggestion a3ad9e
-    function fish_greeting
-        if type -q fastfetch
-            fastfetch --structure Title:Separator:OS:Kernel:Uptime:Shell:DE:Terminal:CPU:GPU:Memory:Disk:Break:Colors
-        end
-    end
-end
-''')
+ greeting.write_text(FISH_CONFIG)
  installed=DATA/'rodip-style/finish-style.py';installed.parent.mkdir(parents=True,exist_ok=True)
  if Path(__file__).resolve()!=installed.resolve():shutil.copy2(__file__,installed)
  auto=CONFIG/'autostart/rodip-style.desktop';auto.parent.mkdir(parents=True,exist_ok=True)

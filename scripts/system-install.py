@@ -3,8 +3,10 @@
 """The only elevated step: install or restore the SDDM theme, without restarting it."""
 import argparse,datetime,json,os,shutil,subprocess,tempfile
 from pathlib import Path
+from kde import write_key
 DEST=Path('/usr/share/sddm/themes/rodip-glass')
 CONF=Path('/etc/sddm.conf.d/zz-rodip-glass.conf')
+MAIN_CONF=Path('/etc/sddm.conf')
 BACKUPS=Path('/var/lib/sddm/rodip-glass-backups')
 def restore(backup):
  backup=backup.resolve()
@@ -12,9 +14,11 @@ def restore(backup):
  state=json.loads((backup/'previous.json').read_text())
  if state['override']:shutil.copy2(backup/'override.conf',CONF)
  else:CONF.unlink(missing_ok=True)
+ # Older receipts did not modify the main configuration.
+ if state.get('main_config'):shutil.copy2(backup/'main.conf',MAIN_CONF)
  if DEST.exists():shutil.rmtree(DEST)
  if state['theme']:shutil.copytree(backup/'theme',DEST)
- if shutil.which('restorecon'):subprocess.run(['restorecon','-RF',str(CONF.parent),str(DEST.parent)],check=True)
+ if shutil.which('restorecon'):subprocess.run(['restorecon','-RF',str(CONF.parent),str(DEST.parent),*([str(MAIN_CONF)] if MAIN_CONF.exists() else [])],check=True)
  print(json.dumps({'restored':str(backup),'restart_performed':False}))
 def install(source):
  allowed={'metadata.desktop','theme.conf','Main.qml','GlassPanel.qml','background.svg','wallpaper.png','wallpaper.jpg','wallpaper.jpeg','wallpaper.webp'}
@@ -24,9 +28,10 @@ def install(source):
  DEST.parent.mkdir(parents=True,exist_ok=True)
  backup=BACKUPS/datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
  backup.mkdir(parents=True,mode=0o700)
- (backup/'previous.json').write_text(json.dumps({'theme':DEST.exists(),'override':CONF.exists()}))
+ (backup/'previous.json').write_text(json.dumps({'theme':DEST.exists(),'override':CONF.exists(),'main_config':MAIN_CONF.exists()}))
  if DEST.exists():shutil.copytree(DEST,backup/'theme')
  if CONF.exists():shutil.copy2(CONF,backup/'override.conf')
+ if MAIN_CONF.exists():shutil.copy2(MAIN_CONF,backup/'main.conf')
  staging=Path(tempfile.mkdtemp(prefix='.rodip-glass-',dir=DEST.parent))
  try:
   for name in names:
@@ -35,8 +40,12 @@ def install(source):
   if DEST.exists():shutil.rmtree(DEST)
   staging.rename(DEST)
   CONF.parent.mkdir(parents=True,exist_ok=True)
-  temp=CONF.with_suffix('.tmp');temp.write_text('[Theme]\nCurrent=rodip-glass\n');temp.chmod(0o644);os.chown(temp,0,0);temp.replace(CONF)
-  if shutil.which('restorecon'):subprocess.run(['restorecon','-RF',str(DEST),str(CONF)],check=True)
+  temp=CONF.with_suffix('.tmp');temp.write_text('[Theme]\nCurrent=rodip-glass\nThemeDir='+str(DEST.parent)+'\n');temp.chmod(0o644);os.chown(temp,0,0);temp.replace(CONF)
+  # SDDM reads /etc/sddm.conf last. Preserve all other keys and comments.
+  if MAIN_CONF.exists():
+   write_key(MAIN_CONF,'[Theme]','Current','rodip-glass')
+   write_key(MAIN_CONF,'[Theme]','ThemeDir',DEST.parent)
+  if shutil.which('restorecon'):subprocess.run(['restorecon','-RF',str(DEST),str(CONF),*([str(MAIN_CONF)] if MAIN_CONF.exists() else [])],check=True)
  except BaseException:
   if staging.exists():shutil.rmtree(staging)
   restore(backup)

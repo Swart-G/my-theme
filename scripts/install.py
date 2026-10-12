@@ -11,8 +11,8 @@ import controller as c
 import lockscreen
 STATE=Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-glass'
 IDS=['local.bart.modularpanel','local.bart.desktopnumbers','local.bart.systemmonitor','KdeControlStation']
-RPM_PACKAGES=['plasma-workspace','plasma-desktop','plasma-nm','plasma-pa','kdeplasma-addons','python3-pyside6','qt6-qttools','ksystemstats','libksysguard','kde-connect','qt6-qt5compat','qt6-qtdeclarative','konsole','fish','fastfetch']
-CONFIG_NAMES=['kdeglobals','plasmarc','kwinrc','plasmashellrc','plasma-org.kde.plasma.desktop-appletsrc','kglobalshortcutsrc','autostart/bart-enhancement-layout.desktop','autostart/modular-glass-layout.desktop','konsolerc','kscreenlockerrc','fish/conf.d/rodip-glass.fish','autostart/rodip-style.desktop']
+RPM_PACKAGES=['plasma-workspace','plasma-desktop','plasma-nm','plasma-pa','kdeplasma-addons','python3-pyside6','python3-evdev','qt6-qttools','ksystemstats','libksysguard','kde-connect','qt6-qt5compat','qt6-qtdeclarative','konsole','fish','fastfetch']
+CONFIG_NAMES=['kdeglobals','plasmarc','kwinrc','plasmashellrc','plasma-org.kde.plasma.desktop-appletsrc','kglobalshortcutsrc','autostart/bart-enhancement-layout.desktop','autostart/modular-glass-layout.desktop','konsolerc','kscreenlockerrc','fish/conf.d/rodip-glass.fish','autostart/rodip-style.desktop','systemd/user/meta-wheel-desktops.service']
 def run(args,**kwargs):
  result=subprocess.run([str(x) for x in args],capture_output=True,text=True,**kwargs)
  if result.returncode:raise RuntimeError(result.stderr.strip() or result.stdout.strip() or f'{args[0]} failed')
@@ -32,7 +32,7 @@ def check(dependencies=False,desktop_only=False):
   elevated(['dnf','install','-y',*missing]);missing=[]
  if missing:return {'missing_packages':missing,'ready':False}
  k.QDBUS=k.find_qdbus()
- for tool in ['plasmashell','kwriteconfig6','plasma-apply-desktoptheme','plasma-apply-colorscheme']:
+ for tool in ['plasmashell','kwriteconfig6','plasma-apply-desktoptheme','plasma-apply-colorscheme','plasma-apply-lookandfeel']:
   if not shutil.which(tool):raise RuntimeError('Нет команды '+tool+'; установите компоненты KDE Plasma 6.')
  from PySide6.QtCore import qVersion
  probe=k.probe()
@@ -40,7 +40,7 @@ def check(dependencies=False,desktop_only=False):
  if len(version)<2 or version[0]!=6 or version[1]<7:raise RuntimeError('Нужна активная сессия KDE Plasma 6.7 или новее в ветке 6.x.')
  return {'ready':True,'plasma':probe['version'],'qt':qVersion(),'screens':probe['screens'],'missing_packages':[]}
 def managed():
- return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'plasma/look-and-feel/org.rodip.glass.desktop',k.DATA/'plasma/shells'/lockscreen.IDENT,k.DATA/'rodip-style',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
+ return [k.CONFIG/name for name in CONFIG_NAMES]+[k.DATA/'plasma/plasmoids'/ident for ident in IDS]+[k.DATA/'plasma/desktoptheme/zhelly0-glass',k.DATA/'color-schemes/RodipGlass.colors',k.DATA/'kwin/scripts/bart-modular-control',k.DATA/'bart-enhancement',k.STATE,k.DATA/'sddm/themes/rodip-glass',k.DATA/'plasma/look-and-feel/org.rodip.glass.desktop',k.DATA/'plasma/shells'/lockscreen.IDENT,k.DATA/'rodip-style',k.DATA/'rodip-glass/meta-wheel-desktops.py',k.DATA/'konsole/RodipGlass.profile',k.DATA/'konsole/RodipGlass.colorscheme',k.DATA/'aurorae/themes/Bart-Wallpaper-A',k.DATA/'aurorae/themes/Bart-Wallpaper-B',Path(os.environ.get('XDG_STATE_HOME',Path.home()/'.local/state'))/'rodip-style']
 def snapshot(destination,paths):
  destination.mkdir(parents=True,mode=0o700)
  items=[]
@@ -137,6 +137,64 @@ def prepare_sddm():
   target=dest/('wallpaper'+suffix);shutil.copy2(image,target)
   p=dest/'theme.conf';p.write_text(p.read_text().replace('background=background.svg','background='+target.name))
  return dest
+def install_screens(backup,desktop_only):
+ screens={'lockscreen':{'installed':False},'login':{'installed':False,'reason':'desktop-only' if desktop_only else 'awaiting-system-install'}}
+ report={'backup':str(backup),'screens':screens,'desktop_only':desktop_only}
+ def save():(STATE/'report.json').write_text(json.dumps(report,indent=2))
+ save()
+ try:
+  package=lockscreen.build(k.DATA)
+  k.write_key(k.CONFIG/'plasmashellrc','[Shell]','ShellPackage',lockscreen.IDENT)
+  image=wallpaper()
+  if image:
+   k.write_key(k.CONFIG/'kscreenlockerrc','[Greeter]','WallpaperPlugin','org.kde.image')
+   for name in ['Image','PreviewImage']:k.write_key(k.CONFIG/'kscreenlockerrc','[Greeter][Wallpaper][org.kde.image][General]',name,image.as_uri())
+  if k.get_key(k.CONFIG/'plasmashellrc','[Shell]','ShellPackage')!=lockscreen.IDENT or not (package/'contents/lockscreen/LockScreen.qml').is_file():
+   raise RuntimeError('Не удалось подтвердить установку экрана блокировки.')
+  screens['lockscreen']={'package':lockscreen.IDENT,'installed':True}
+  save()
+ except Exception as error:
+  screens['lockscreen']['error']=str(error);save();raise
+ if not desktop_only:
+  print('Установка экрана входа SDDM: может потребоваться системный пароль администратора.',flush=True)
+  try:
+   result=elevated([sys.executable,ROOT/'scripts/system-install.py','--source',prepare_sddm()])
+   receipt=json.loads(result)
+   (backup/'sddm.json').write_text(json.dumps(receipt,indent=2))
+   screens['login']={'installed':True,'theme':'rodip-glass','config':receipt['config']}
+   save()
+  except Exception as error:
+   screens['login']['reason']='system-install-failed';screens['login']['error']=str(error);save();raise
+  print('Экран входа SDDM установлен. Активный сеанс не перезапускается.',flush=True)
+ return screens
+def install_meta_wheel(backup):
+ from evdev import InputDevice, ecodes, list_devices
+ service='meta-wheel-desktops.service'
+ enabled=subprocess.run(['systemctl','--user','is-enabled',service],capture_output=True,text=True).stdout.strip()
+ (backup/'meta-wheel-state.json').write_text(json.dumps({'enabled':enabled}))
+ if subprocess.run(['systemctl','--user','is-active','--quiet',service]).returncode==0:run(['systemctl','--user','stop',service])
+ # Install persistent logind/udev access, without adding users to the input group.
+ print('Настройка Win + колёсико: может потребоваться системный пароль администратора.',flush=True)
+ receipt=json.loads(elevated([sys.executable,ROOT/'scripts/input-install.py']))
+ (backup/'input.json').write_text(json.dumps(receipt,indent=2))
+ devices=[InputDevice(path) for path in list_devices()]
+ try:
+  if not any({ecodes.KEY_LEFTMETA,ecodes.KEY_RIGHTMETA}.intersection(d.capabilities().get(ecodes.EV_KEY,[])) for d in devices):raise RuntimeError('Нет доступа к клавиатуре для Win + колёсико.')
+  if not any(ecodes.REL_WHEEL in d.capabilities().get(ecodes.EV_REL,[]) for d in devices):raise RuntimeError('Нет доступа к колёсику мыши для Win + колёсико.')
+  if not os.access('/dev/uinput',os.W_OK):raise RuntimeError('Нет доступа к /dev/uinput для Win + колёсико.')
+ finally:
+  for device in devices:device.close()
+ script=k.DATA/'rodip-glass/meta-wheel-desktops.py';script.parent.mkdir(parents=True,exist_ok=True)
+ shutil.copy2(ROOT/'scripts/meta-wheel-desktops.py',script)
+ unit=k.CONFIG/'systemd/user'/service;unit.parent.mkdir(parents=True,exist_ok=True)
+ # systemd quoted command paths need percent specifiers escaped as well.
+ command=json.dumps(str(script),ensure_ascii=False).replace('%','%%').replace('$','$$')
+ unit.write_text('[Unit]\nDescription=Meta + scroll wheel switches virtual desktops\nAfter=graphical-session.target\nPartOf=graphical-session.target\n\n[Service]\nExecStart=/usr/bin/python3 '+command+'\nRestart=on-failure\nRestartSec=2\n\n[Install]\nWantedBy=graphical-session.target\n')
+ run(['systemctl','--user','daemon-reload'])
+ run(['systemctl','--user','enable','--now',service])
+ time.sleep(.5)
+ run(['systemctl','--user','is-active',service])
+ return {'service':service,'installed':True,'up':'previous','down':'next'}
 def restore(backup):
  if not backup:backup=Path((STATE/'latest').read_text().strip())
  else:backup=backup.resolve()
@@ -146,7 +204,14 @@ def restore(backup):
   raise RuntimeError('Выйдите из KDE, войдите в TTY (Ctrl+Alt+F3) и запустите install.sh --restore. Приложения не будут закрыты автоматически.')
  receipt=backup/'sddm.json'
  if receipt.exists():elevated([sys.executable,ROOT/'scripts/system-install.py','--restore',json.loads(receipt.read_text())['backup']])
+ input_receipt=backup/'input.json'
+ wheel_state=backup/'meta-wheel-state.json'
+ if wheel_state.exists() and (k.CONFIG/'systemd/user/meta-wheel-desktops.service').exists():run(['systemctl','--user','disable','--now','meta-wheel-desktops.service'])
+ if input_receipt.exists():elevated([sys.executable,ROOT/'scripts/input-install.py','--restore',json.loads(input_receipt.read_text())['backup']])
  restore_files(backup,managed())
+ if wheel_state.exists():
+  run(['systemctl','--user','daemon-reload'])
+  if json.loads(wheel_state.read_text())['enabled']=='enabled':run(['systemctl','--user','enable','meta-wheel-desktops.service'])
  print('Настройки восстановлены. Войдите в KDE.',flush=True)
 def apply(args):
  status=check(dependencies=True,desktop_only=args.desktop_only)
@@ -164,11 +229,12 @@ def apply(args):
    for key,value in [('BlurStrength',8),('NoiseStrength',3)]:k.write_key(k.CONFIG/'kwinrc','[Effect-blur]',key,value)
    k.write_key(k.CONFIG/'kwinrc','[Plugins]','blurEnabled','true')
    k.write_key(k.CONFIG/'kwinrc','[Plugins]','bart-modular-controlEnabled','true')
-   lockscreen.build(k.DATA)
-   k.write_key(k.CONFIG/'plasmashellrc','[Shell]','ShellPackage',lockscreen.IDENT)
-   image=wallpaper()
-   if image:
-    for name in ['Image','PreviewImage']:k.write_key(k.CONFIG/'kscreenlockerrc','[Greeter][Wallpaper][org.kde.image][General]',name,image.as_uri())
+   # Apply global defaults before selecting the locker shell. Install both
+   # screens before panel validation, which can fail on a slow Plasma startup.
+   run(['plasma-apply-lookandfeel','--apply','org.rodip.glass.desktop'])
+   k.write_key(k.CONFIG/'kdeglobals','[KDE]','DefaultDarkLookAndFeel','org.rodip.glass.desktop')
+   screens=install_screens(backup,args.desktop_only)
+   meta_wheel=install_meta_wheel(backup)
    restart_shell();k.desktops();opts=options();k.STATE.mkdir(parents=True,exist_ok=True)
    layout=c.create_layout(opts);expected_ids=[p['id'] for p in layout];k.dbus('org.kde.KWin','/KWin','reconfigure');c.reload_kwin_script()
    try:k.dbus('org.kde.KWin','/Effects','org.kde.kwin.Effects.loadEffect','blur')
@@ -186,18 +252,7 @@ def apply(args):
    run([sys.executable,ROOT/'scripts/finish-style.py','--apply'])
    subprocess.Popen([sys.executable,str(k.DATA/'rodip-style/finish-style.py'),'--watch'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
    start_watch()
-   run(['plasma-apply-lookandfeel','--apply','org.rodip.glass.desktop'])
-   k.write_key(k.CONFIG/'kdeglobals','[KDE]','DefaultDarkLookAndFeel','org.rodip.glass.desktop')
-   screens={'lockscreen': {'package':lockscreen.IDENT,'installed':True},'login':{'installed':False,'reason':'desktop-only' if args.desktop_only else 'awaiting-system-install'}}
-   report={'backup':str(backup),'system':status,'desktop_only':args.desktop_only,'panels':[p['id'] for p in panels],'screens':screens,'global_theme':'org.rodip.glass.desktop'}
-   (STATE/'report.json').write_text(json.dumps(report,indent=2))
-   if not args.desktop_only:
-    print('Установка экрана входа SDDM: может потребоваться системный пароль администратора.',flush=True)
-    result=elevated([sys.executable,ROOT/'scripts/system-install.py','--source',prepare_sddm()])
-    receipt=json.loads(result)
-    (backup/'sddm.json').write_text(json.dumps(receipt,indent=2))
-    screens['login']={'installed':True,'theme':'rodip-glass','config':receipt['config']}
-    print('Экран входа SDDM установлен. Активный сеанс не перезапускается.',flush=True)
+   report={'backup':str(backup),'system':status,'desktop_only':args.desktop_only,'panels':[p['id'] for p in panels],'screens':screens,'meta_wheel':meta_wheel,'global_theme':'org.rodip.glass.desktop'}
    (STATE/'report.json').write_text(json.dumps(report,indent=2))
    print('Готово. Глобальная тема и экран блокировки установлены.' + (' Экран входа SDDM пропущен: --desktop-only.' if args.desktop_only else ' Экран входа SDDM применяется при следующем запуске SDDM.'),flush=True)
   except BaseException as error:
@@ -215,6 +270,6 @@ if __name__=='__main__':
   if os.geteuid()==0:raise RuntimeError('Запускайте install.sh обычным пользователем, без sudo.')
   if args.restore:restore(None if args.restore=='latest' else Path(args.restore))
   elif args.check or args.dry_run:
-   print(json.dumps({'system':check(desktop_only=args.desktop_only),'options':options(),'plan':['backup','install source packages','apply glass theme and wallpaper accent','create and verify floating panels','replace previous panels','activate output recovery']+([] if args.desktop_only else ['install matching SDDM with administrator authentication']),'changes':False},ensure_ascii=False,indent=2))
+   print(json.dumps({'system':check(desktop_only=args.desktop_only),'options':options(),'plan':['backup','install source packages','apply glass theme and wallpaper accent','install native lockscreen','install Win + mouse wheel desktop switching with administrator authentication','create and verify floating panels','replace previous panels','activate output recovery']+([] if args.desktop_only else ['install matching SDDM with administrator authentication']),'changes':False},ensure_ascii=False,indent=2))
   else:apply(args)
  except Exception as error:print('Ошибка: '+str(error),file=sys.stderr);sys.exit(1)
