@@ -125,7 +125,7 @@ def main():
                         set_wheel_grabbed(is_held)
                 elif event.type == ecodes.EV_REL and event.code == ecodes.REL_WHEEL:
                     if meta_down and event.value != 0:
-                        switch(event.value)  # Same direction as the numbered desktop widget.
+                        switch(-event.value)  # Up returns to desktop 1; down advances.
                     elif forwarded:
                         continue
 
