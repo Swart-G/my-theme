@@ -194,7 +194,7 @@ def install_meta_wheel(backup):
  run(['systemctl','--user','enable','--now',service])
  time.sleep(.5)
  run(['systemctl','--user','is-active',service])
- return {'service':service,'installed':True,'up':'previous','down':'next'}
+ return {'service':service,'installed':True,'up':'next','down':'previous'}
 def restore(backup):
  if not backup:backup=Path((STATE/'latest').read_text().strip())
  else:backup=backup.resolve()
