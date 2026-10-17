@@ -177,8 +177,9 @@ def install_meta_wheel(backup):
  print('Настройка Win + колёсико: может потребоваться системный пароль администратора.',flush=True)
  receipt=json.loads(elevated([sys.executable,ROOT/'scripts/input-install.py']))
  (backup/'input.json').write_text(json.dumps(receipt,indent=2))
- devices=[InputDevice(path) for path in list_devices()]
+ devices=[]
  try:
+  for path in list_devices():devices.append(InputDevice(path))
   if not any({ecodes.KEY_LEFTMETA,ecodes.KEY_RIGHTMETA}.intersection(d.capabilities().get(ecodes.EV_KEY,[])) for d in devices):raise RuntimeError('Нет доступа к клавиатуре для Win + колёсико.')
   if not any(ecodes.REL_WHEEL in d.capabilities().get(ecodes.EV_REL,[]) for d in devices):raise RuntimeError('Нет доступа к колёсику мыши для Win + колёсико.')
   if not os.access('/dev/uinput',os.W_OK):raise RuntimeError('Нет доступа к /dev/uinput для Win + колёсико.')
@@ -234,7 +235,12 @@ def apply(args):
    run(['plasma-apply-lookandfeel','--apply','org.rodip.glass.desktop'])
    k.write_key(k.CONFIG/'kdeglobals','[KDE]','DefaultDarkLookAndFeel','org.rodip.glass.desktop')
    screens=install_screens(backup,args.desktop_only)
-   meta_wheel=install_meta_wheel(backup)
+   try:meta_wheel=install_meta_wheel(backup)
+   except Exception as error:
+    meta_wheel={'installed':False,'error':str(error)}
+    print('Предупреждение: Win + колёсико не настроено: '+str(error)+' Установка оформления продолжается.',file=sys.stderr,flush=True)
+   # Preserve the optional step result even if later panel setup fails.
+   (STATE/'report.json').write_text(json.dumps({'backup':str(backup),'system':status,'desktop_only':args.desktop_only,'screens':screens,'meta_wheel':meta_wheel},indent=2))
    restart_shell();k.desktops();opts=options();k.STATE.mkdir(parents=True,exist_ok=True)
    layout=c.create_layout(opts);expected_ids=[p['id'] for p in layout];k.dbus('org.kde.KWin','/KWin','reconfigure');c.reload_kwin_script()
    try:k.dbus('org.kde.KWin','/Effects','org.kde.kwin.Effects.loadEffect','blur')

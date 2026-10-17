@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 import importlib.util,json,os,re,shutil,subprocess,sys,tempfile,unittest
 from pathlib import Path
+from contextlib import ExitStack
+from types import SimpleNamespace
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
@@ -8,6 +10,37 @@ import install
 spec=importlib.util.spec_from_file_location('system_install',ROOT/'scripts/system-install.py')
 system=importlib.util.module_from_spec(spec);spec.loader.exec_module(system)
 class InstallationTests(unittest.TestCase):
+ def test_optional_wheel_failure_does_not_block_desktop_or_lose_screen_report(self):
+  for error,late_failure in [(RuntimeError('Нет доступа к колёсику мыши'),False),(ModuleNotFoundError('evdev'),False),(PermissionError('input access denied'),False),(RuntimeError('service failed'),True)]:
+   with self.subTest(error=str(error),late_failure=late_failure),tempfile.TemporaryDirectory() as temp,ExitStack() as stack:
+    base=Path(temp);screens={'lockscreen':{'installed':True},'login':{'installed':True}}
+    stack.enter_context(patch.object(install,'STATE',base/'state'))
+    stack.enter_context(patch.object(install.k,'STATE',base/'panel-state'))
+    stack.enter_context(patch.object(install.k,'CONFIG',base/'config'))
+    stack.enter_context(patch.object(install,'check',return_value={'ready':True}))
+    stack.enter_context(patch.object(install,'install_screens',return_value=screens))
+    stack.enter_context(patch.object(install,'install_meta_wheel',side_effect=error))
+    restart=stack.enter_context(patch.object(install,'restart_shell',side_effect=RuntimeError('shell failed') if late_failure else None))
+    stack.enter_context(patch.object(install,'snapshot',side_effect=lambda destination,paths:destination.mkdir(parents=True)))
+    for name in ['stop_watchers','copy_packages','run','start_watch']:
+     stack.enter_context(patch.object(install,name))
+    for name in ['write_key','desktops','dbus','evaluate']:
+     stack.enter_context(patch.object(install.k,name))
+    stack.enter_context(patch.object(install,'options',return_value={}))
+    stack.enter_context(patch.object(install.c,'create_layout',return_value=[{'id':1}]))
+    stack.enter_context(patch.object(install.c,'reload_kwin_script'))
+    stack.enter_context(patch.object(install,'validate',return_value=[{'id':1}]))
+    stack.enter_context(patch.object(install.subprocess,'Popen'))
+    stack.enter_context(patch.object(install.time,'sleep'))
+    stack.enter_context(patch('sys.stderr'))
+    if late_failure:
+     with self.assertRaisesRegex(RuntimeError,'shell failed'):install.apply(SimpleNamespace(desktop_only=False))
+    else:install.apply(SimpleNamespace(desktop_only=False))
+    restart.assert_called_once()
+    report=json.loads((base/'state/report.json').read_text())
+    self.assertEqual(report['screens'],screens)
+    self.assertEqual(report['meta_wheel'],{'installed':False,'error':str(error)})
+    if not late_failure:self.assertEqual(report['panels'],[1])
  def test_new_dependencies_refresh_qdbus_location(self):
   from types import SimpleNamespace
   qt=SimpleNamespace(qVersion=lambda:'6.11.2')

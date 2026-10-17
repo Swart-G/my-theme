@@ -11,7 +11,7 @@ def load(name):
  return module
 
 class MetaWheelTests(unittest.TestCase):
- def test_meta_wheel_up_goes_next_and_down_goes_previous(self):
+ def test_meta_wheel_up_goes_previous_and_down_goes_next(self):
   try:wheel=load('meta-wheel-desktops')
   except ImportError:self.skipTest('Python evdev is not installed')
   keyboard=Mock(path='/dev/input/keyboard',fd=10);keyboard.name='keyboard'
@@ -23,7 +23,7 @@ class MetaWheelTests(unittest.TestCase):
   selector=Mock();selector.select.side_effect=[[(SimpleNamespace(data=keyboard),None),(SimpleNamespace(data=mouse),None)],RuntimeError('test finished')]
   with patch.object(wheel,'list_devices',return_value=[keyboard.path,mouse.path]),patch.object(wheel,'InputDevice',side_effect=[keyboard,mouse]),patch.object(wheel,'find_qdbus',return_value='/qt6/qdbus'),patch.object(wheel.selectors,'DefaultSelector',return_value=selector),patch.object(wheel.UInput,'from_device'),patch.object(wheel.time,'monotonic',return_value=0),patch.object(wheel.subprocess,'run') as run:
    with self.assertRaisesRegex(RuntimeError,'test finished'):wheel.main()
-   self.assertEqual([call.args[0][-1] for call in run.call_args_list],['Switch to Next Desktop','Switch to Previous Desktop'])
+   self.assertEqual([call.args[0][-1] for call in run.call_args_list],['Switch to Previous Desktop','Switch to Next Desktop'])
 
  def test_switch_and_forwarding_preserve_mouse_events(self):
   try:wheel=load('meta-wheel-desktops')
