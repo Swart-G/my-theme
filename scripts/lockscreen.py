@@ -18,6 +18,7 @@ def build(data,native=None):
  # Explicit data list keeps decoration out of the native authentication layout.
  glass='''
     data: [Rectangle {
+        objectName: "rodipGlassPasswordCard"
         parent: sessionManager
         z: -1
         width: Math.min(sessionManager.width - 24, Kirigami.Units.gridUnit * 24)
@@ -33,6 +34,8 @@ def build(data,native=None):
  destination=package/'contents/lockscreen'
  destination.parent.mkdir(parents=True,exist_ok=True)
  with tempfile.TemporaryDirectory(prefix='.lockscreen-',dir=package) as temp:
+  # Rebuild from native files on every install: restore the unmodified clock
+  # and discard old local decorations, including backgrounds under the clock.
   staging=Path(temp)/'lockscreen';shutil.copytree(native,staging)
   offset=markers[0].end()
   (staging/'MainBlock.qml').write_text(main[:offset]+glass+main[offset:])

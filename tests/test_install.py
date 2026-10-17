@@ -151,6 +151,15 @@ class InstallationTests(unittest.TestCase):
    self.assertIn('authenticator.respond', (package/'contents/lockscreen/LockScreenUi.qml').read_text())
    self.assertIn('sessionManager.startLogin()',main)
    self.assertIn('data: [Rectangle',main)
+   # A reinstall must remove the old clock background and obsolete QML files.
+   ui=package/'contents/lockscreen/LockScreenUi.qml'
+   ui.write_text(ui.read_text()+'\nRectangle { objectName: "rodipGlassClockCard" }\n')
+   obsolete=package/'contents/lockscreen/OldClockCard.qml';obsolete.write_text('Rectangle {}')
+   lockscreen.build(base/'data',native)
+   self.assertEqual(ui.read_bytes(),(native/'LockScreenUi.qml').read_bytes())
+   self.assertFalse(obsolete.exists())
+   self.assertEqual((package/'contents/lockscreen/MainBlock.qml').read_text(),main)
+   self.assertEqual(main.count('objectName: "rodipGlassPasswordCard"'),1)
    (native/'MainBlock.qml').write_text('unsupported KDE API')
    with self.assertRaises(RuntimeError):lockscreen.build(base/'data',native)
    self.assertEqual((package/'contents/lockscreen/MainBlock.qml').read_text(),main)
