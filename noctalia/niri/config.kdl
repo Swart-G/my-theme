@@ -1,0 +1,76 @@
+// Reference: github.com/niri-wm/niri README screenshot; shortcuts from local Plasma.
+input {
+    keyboard {
+        xkb { layout "us,ru"; options "kpdl:dot,grp:win_space_toggle"; }
+        numlock
+        repeat-delay 300
+        repeat-rate 35
+    }
+    touchpad { tap; natural-scroll; }
+}
+layout {
+    gaps 16
+    center-focused-column "never"
+    preset-column-widths { proportion 0.33333; proportion 0.5; proportion 0.66667; }
+    default-column-width { proportion 0.5; }
+    focus-ring {
+        width 2
+        active-color "#a6c8ff"
+        inactive-color "#45475a"
+    }
+    border { off; }
+    shadow {
+        on
+        softness 24
+        spread 3
+        offset x=0 y=5
+        color "#00000055"
+    }
+    tab-indicator {
+        width 4
+        gap 5
+        corner-radius 8
+        active-color "#a6c8ff"
+        inactive-color "#45475a"
+    }
+}
+cursor {
+    xcursor-theme "breeze_cursors"
+    xcursor-size 24
+    hide-when-typing
+}
+spawn-at-startup "systemctl" "--user" "start" "noctalia.service"
+hotkey-overlay { skip-at-startup; }
+screenshot-path "~/Pictures/Screenshots/Screenshot-%Y-%m-%d-%H-%M-%S.png"
+window-rule {
+    geometry-corner-radius 14
+    clip-to-geometry true
+    draw-border-with-background false
+}
+window-rule {
+    match app-id="^Alacritty$"
+    background-effect { blur true; }
+}
+window-rule {
+    match app-id="^org.kde.polkit-kde-authentication-agent-1$"
+    match app-id="^org.kde.kcalc$"
+    open-floating true
+}
+window-rule {
+    match app-id="^xwaylandvideobridge$"
+    open-floating true
+    opacity 0.0
+    min-width 1
+    max-width 1
+    min-height 1
+    max-height 1
+    focus-ring { off; }
+    shadow { off; }
+}
+recent-windows {
+    highlight { active-color "#a6c8ff"; corner-radius 14; padding 16; }
+    previews { max-height 320; }
+}
+overview { backdrop-color "#17191f"; }
+include "basicsettings.kdl" // Added by niri-settings
+include "keybinds.kdl" // Added by niri-settings

@@ -1,0 +1,13 @@
+config_version = 16
+
+[bar.default]
+end = ["tray", "notifications", "network", "volume", "battery", "keyboard_layout"]
+start = ["control-center", "workspaces"]
+widget_spacing = 10
+
+[control_center.calendar]
+show_events_card = false
+
+[lockscreen_widgets]
+enabled = false
+schema_version = 2

@@ -1,0 +1,97 @@
+binds {
+    XF86PowerOff repeat=false { spawn "noctalia" "msg" "panel-toggle" "session"; }
+    XF86Sleep repeat=false allow-when-locked=true { spawn "noctalia" "msg" "session" "suspend"; }
+    Mod+P repeat=false hotkey-overlay-title="Экран и яркость" { spawn "noctalia" "msg" "panel-open" "control-center" "display"; }
+
+    Mod+I repeat=false hotkey-overlay-title="Настройки Niri" { spawn "noctalia" "msg" "settings-open"; }
+    Mod+K repeat=false hotkey-overlay-title="Меню приложений" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Alt+F1 repeat=false { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Alt+Space repeat=false { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Alt+F2 repeat=false { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+F repeat=false hotkey-overlay-title="Поиск приложений · Noctalia" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+T repeat=false hotkey-overlay-title="Telegram" { spawn "flatpak" "run" "org.telegram.desktop"; }
+    Mod+B repeat=false hotkey-overlay-title="Браузер" { spawn "google-chrome-stable"; }
+    Mod+O repeat=false hotkey-overlay-title="Obsidian" { spawn "@BIN@/niri-open-obsidian"; }
+    Ctrl+Alt+T repeat=false hotkey-overlay-title="Терминал" { spawn "alacritty" "--config-file" "@CONFIG@/niri/alacritty.toml"; }
+    Mod+E repeat=false hotkey-overlay-title="Файлы" { spawn "thunar"; }
+    Mod+V repeat=false hotkey-overlay-title="История буфера" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
+    Mod+Shift+K repeat=false hotkey-overlay-title="Центр управления" { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
+    Mod+L repeat=false hotkey-overlay-title="Блокировка" { spawn "noctalia" "msg" "session" "lock"; }
+    Mod+Alt+L { switch-layout "next"; }
+    Mod+Q repeat=false hotkey-overlay-title="Закрыть окно" { close-window; }
+    Alt+F4 repeat=false { close-window; }
+    Mod+W hotkey-overlay-title="Обзор окон" { toggle-overview; }
+    Mod+G { toggle-overview; }
+    Ctrl+F9 { toggle-overview; }
+    Ctrl+F10 { toggle-overview; }
+    Mod+D repeat=false hotkey-overlay-title="Показать рабочий стол" { spawn "@BIN@/niri-show-desktop"; }
+    Ctrl+F12 repeat=false { spawn "@BIN@/niri-show-desktop"; }
+    Mod+Page_Up hotkey-overlay-title="Развернуть окно" { maximize-window-to-edges; }
+    Mod+BackSpace hotkey-overlay-title="Обычная ширина окна" { set-column-width "50%"; }
+    Mod+Shift+F hotkey-overlay-title="Полный экран" { fullscreen-window; }
+    Mod+Shift+Space hotkey-overlay-title="Плавающее окно" { toggle-window-floating; }
+    Mod+R hotkey-overlay-title="Изменить ширину колонки" { switch-preset-column-width; }
+    Mod+C { center-column; }
+    Mod+Shift+W { toggle-column-tabbed-display; }
+    Mod+Alt+Left { focus-column-left; }
+    Mod+Alt+Right { focus-column-right; }
+    Mod+Alt+Up { focus-window-up; }
+    Mod+Alt+Down { focus-window-down; }
+    Mod+Left { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Up { focus-workspace-up; }
+    Mod+Down { focus-workspace-down; }
+    Mod+Ctrl+Left { move-column-left; }
+    Mod+Ctrl+Up { focus-workspace-up; }
+    Mod+Ctrl+Right { move-column-right; }
+    Mod+Ctrl+Down { focus-workspace-down; }
+    Mod+Ctrl+Shift+Left { move-window-to-workspace-up; }
+    Mod+Ctrl+Shift+Up { move-window-to-workspace-up; }
+    Mod+Ctrl+Shift+Right { move-window-to-workspace-down; }
+    Mod+Ctrl+Shift+Down { move-window-to-workspace-down; }
+    Mod+Shift+Left { move-window-to-monitor-previous; }
+    Mod+Shift+Right { move-window-to-monitor-next; }
+    Mod+1 { focus-workspace 1; }
+    Mod+F1 { focus-workspace 1; }
+    Ctrl+F1 { focus-workspace 1; }
+    Mod+Shift+1 { move-window-to-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+F2 { focus-workspace 2; }
+    Ctrl+F2 { focus-workspace 2; }
+    Mod+Shift+2 { move-window-to-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+F3 { focus-workspace 3; }
+    Ctrl+F3 { focus-workspace 3; }
+    Mod+Shift+3 { move-window-to-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+F4 { focus-workspace 4; }
+    Ctrl+F4 { focus-workspace 4; }
+    Mod+Shift+4 { move-window-to-workspace 4; }
+    Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp cooldown-ms=150 { focus-workspace-up; }
+    Mod+BracketLeft { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+    Print repeat=false { spawn "noctalia" "msg" "screenshot-region"; }
+    Ctrl+Print repeat=false { spawn "noctalia" "msg" "screenshot-fullscreen"; }
+    Alt+Print repeat=false { spawn "noctalia" "msg" "screenshot-window"; }
+    Mod+Shift+S repeat=false { spawn "noctalia" "msg" "screenshot-region"; }
+    XF86AudioRaiseVolume repeat=false allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }
+    XF86AudioLowerVolume repeat=false allow-when-locked=true { spawn "noctalia" "msg" "volume-down"; }
+    Shift+XF86AudioRaiseVolume repeat=false allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "1%+" "--limit" "1.0"; }
+    Shift+XF86AudioLowerVolume repeat=false allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "1%-"; }
+    XF86AudioMute repeat=false allow-when-locked=true { spawn "noctalia" "msg" "volume-mute"; }
+    XF86AudioMicMute repeat=false allow-when-locked=true { spawn "noctalia" "msg" "mic-mute"; }
+    XF86AudioPlay repeat=false allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPause repeat=false allow-when-locked=true { spawn "playerctl" "pause"; }
+    XF86AudioNext repeat=false allow-when-locked=true { spawn "playerctl" "next"; }
+    XF86AudioPrev repeat=false allow-when-locked=true { spawn "playerctl" "previous"; }
+    XF86AudioStop repeat=false allow-when-locked=true { spawn "playerctl" "stop"; }
+    XF86MonBrightnessUp repeat=false allow-when-locked=true { spawn "noctalia" "msg" "brightness-up"; }
+    XF86MonBrightnessDown repeat=false allow-when-locked=true { spawn "noctalia" "msg" "brightness-down"; }
+    Shift+XF86MonBrightnessUp repeat=false allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+1%"; }
+    Shift+XF86MonBrightnessDown repeat=false allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "1%-"; }
+    Mod+Shift+Slash hotkey-overlay-title="Все сочетания" { show-hotkey-overlay; }
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete repeat=false hotkey-overlay-title="Меню сеанса" { spawn "noctalia" "msg" "panel-toggle" "session"; }
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+}

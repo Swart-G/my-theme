@@ -1,0 +1,65 @@
+[shell]
+lang = "ru"
+font_family = "Adwaita Sans"
+setup_wizard_enabled = false
+settings_show_advanced = true
+polkit_agent = true
+clipboard_enabled = true
+launch_apps_as_systemd_services = true
+
+[shell.panel]
+control_center_placement = "attached"
+control_center_position = "auto"
+launcher_placement = "floating"
+launcher_position = "center"
+
+[theme]
+mode = "dark"
+
+[bar.default]
+position = "left"
+thickness = 48
+margin_edge = 0
+margin_ends = 0
+padding = 8
+widget_spacing = 6
+background_opacity = 0.96
+radius = 12
+concave_edge_corners = false
+radius_top_left = 0
+radius_bottom_left = 0
+radius_top_right = 12
+radius_bottom_right = 12
+reserve_space = true
+start = ["launcher", "workspaces"]
+center = ["clock"]
+end = ["tray", "keyboard_layout", "notifications", "volume", "network", "bluetooth", "battery", "control-center", "settings"]
+
+[wallpaper]
+enabled = true
+fill_mode = "crop"
+transition_on_startup = false
+
+[wallpaper.default]
+path = "@CONFIG@/niri/wallpaper-city.jpg"
+
+[dock]
+enabled = false
+
+[idle.behavior.lock]
+enabled = true
+timeout = 600
+action = "lock"
+
+[idle.behavior.screen-off]
+enabled = true
+timeout = 900
+action = "screen_off"
+
+[shell.launcher]
+fetch_exchange_rates = false
+
+[lockscreen]
+transition = ["fade"]
+transition_duration = 250
+lock_before_suspend = true

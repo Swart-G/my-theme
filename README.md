@@ -1,5 +1,12 @@
 # Rodip Glass
 
+В репозитории два независимых установщика:
+
+- `install.sh` — Rodip Glass для KDE Plasma, описан ниже.
+- [`install-noctalia.sh`](noctalia/README.md) — текущее оформление **Niri +
+  Noctalia**, включая терминал, обои, горячие клавиши, блокировку и Noctalia
+  Greeter до первого входа: `bash ./install-noctalia.sh` (Fedora 44).
+
 Матовое стеклянное оформление KDE Plasma 6: плавающая верхняя панель,
 компактные рабочие столы слева, часы по центру, выезжающий dashboard,
 Control Station и экран входа SDDM в одном стиле.

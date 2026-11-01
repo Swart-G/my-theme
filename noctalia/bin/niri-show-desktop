@@ -1,0 +1,19 @@
+#!/usr/bin/python3
+import json,os,subprocess
+from pathlib import Path
+ws=json.loads(subprocess.check_output(['niri','msg','-j','workspaces']))
+p=Path(os.environ['XDG_RUNTIME_DIR'])/'niri-show-desktop.json'
+cur=next(w for w in ws if w['is_focused'])
+if p.exists():
+ try:
+  old=json.loads(p.read_text()); target=next((w for w in ws if w['id']==old['return']),None)
+  p.unlink()
+  if cur['id']==old['desktop'] and target:
+   subprocess.run(['niri','msg','action','focus-workspace',str(target['idx'])]);raise SystemExit
+ except (ValueError,KeyError):p.unlink(missing_ok=True)
+windows=json.loads(subprocess.check_output(['niri','msg','-j','windows']))
+used={w['workspace_id'] for w in windows}
+empty=[w for w in ws if w['output']==cur['output'] and w['id'] not in used and w['id']!=cur['id']]
+if empty:
+ target=empty[-1];p.write_text(json.dumps({'return':cur['id'],'desktop':target['id']}))
+ subprocess.run(['niri','msg','action','focus-workspace',str(target['idx'])])

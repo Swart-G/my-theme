@@ -1,0 +1,10 @@
+#!/usr/bin/python3
+import os,shutil,subprocess
+from pathlib import Path
+if shutil.which('obsidian'): os.execvp('obsidian',['obsidian'])
+for p in [Path.home()/'.local/share/applications/obsidian_obsidian.desktop',Path('/usr/share/applications/obsidian.desktop')]:
+ if p.exists(): os.execvp('gtk-launch',['gtk-launch',p.stem])
+apps=list(Path.home().joinpath('Downloads').glob('*bsidian*.AppImage'))
+if apps:
+ os.execv(str(apps[-1]),[str(apps[-1])])
+subprocess.run(['notify-send','Obsidian','Прежний ярлык Plasma остался, но установленный Obsidian не найден.'])
