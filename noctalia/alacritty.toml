@@ -1,0 +1,2 @@
+[general]
+import = ["@CONFIG@/niri/alacritty.toml"]

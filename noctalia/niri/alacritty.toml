@@ -27,3 +27,51 @@ blue = "#89b4fa"
 magenta = "#cba6f7"
 cyan = "#94e2d5"
 white = "#a6adc8"
+
+[terminal.shell]
+program = "fish"
+
+# Russian equivalents of the standard US-layout terminal shortcuts.
+[keyboard]
+bindings = [
+    { key = "С", mods = "Control|Shift", action = "Copy" },
+    { key = "М", mods = "Control|Shift", action = "Paste", mode = "~Vi" },
+    { key = "М", mods = "Control|Shift", action = "Paste", mode = "Vi|Search" },
+    { key = "А", mods = "Control|Shift", action = "SearchForward", mode = "~Search" },
+    { key = "И", mods = "Control|Shift", action = "SearchBackward", mode = "~Search" },
+    { key = "С", mods = "Control|Shift", action = "ClearSelection", mode = "Vi|~Search" },
+    { key = "Ф", mods = "Control", chars = "\u0001", mode = "~Vi|~Search" },
+    { key = "И", mods = "Control", chars = "\u0002", mode = "~Vi|~Search" },
+    { key = "С", mods = "Control", chars = "\u0003", mode = "~Vi|~Search" },
+    { key = "В", mods = "Control", chars = "\u0004", mode = "~Vi|~Search" },
+    { key = "У", mods = "Control", chars = "\u0005", mode = "~Vi|~Search" },
+    { key = "А", mods = "Control", chars = "\u0006", mode = "~Vi|~Search" },
+    { key = "П", mods = "Control", chars = "\u0007", mode = "~Vi|~Search" },
+    { key = "Р", mods = "Control", chars = "\u0008", mode = "~Vi|~Search" },
+    { key = "Ш", mods = "Control", chars = "\u0009", mode = "~Vi|~Search" },
+    { key = "О", mods = "Control", chars = "\u000a", mode = "~Vi|~Search" },
+    { key = "Л", mods = "Control", chars = "\u000b", mode = "~Vi|~Search" },
+    { key = "Д", mods = "Control", chars = "\u000c", mode = "~Vi|~Search" },
+    { key = "Ь", mods = "Control", chars = "\u000d", mode = "~Vi|~Search" },
+    { key = "Т", mods = "Control", chars = "\u000e", mode = "~Vi|~Search" },
+    { key = "Щ", mods = "Control", chars = "\u000f", mode = "~Vi|~Search" },
+    { key = "З", mods = "Control", chars = "\u0010", mode = "~Vi|~Search" },
+    { key = "Й", mods = "Control", chars = "\u0011", mode = "~Vi|~Search" },
+    { key = "К", mods = "Control", chars = "\u0012", mode = "~Vi|~Search" },
+    { key = "Ы", mods = "Control", chars = "\u0013", mode = "~Vi|~Search" },
+    { key = "Е", mods = "Control", chars = "\u0014", mode = "~Vi|~Search" },
+    { key = "Г", mods = "Control", chars = "\u0015", mode = "~Vi|~Search" },
+    { key = "М", mods = "Control", chars = "\u0016", mode = "~Vi|~Search" },
+    { key = "Ц", mods = "Control", chars = "\u0017", mode = "~Vi|~Search" },
+    { key = "Ч", mods = "Control", chars = "\u0018", mode = "~Vi|~Search" },
+    { key = "Н", mods = "Control", chars = "\u0019", mode = "~Vi|~Search" },
+    { key = "Я", mods = "Control", chars = "\u001a", mode = "~Vi|~Search" },
+    { key = "И", mods = "Alt", chars = "\u001bb", mode = "~Vi|~Search" },
+    { key = "В", mods = "Alt", chars = "\u001bd", mode = "~Vi|~Search" },
+    { key = "А", mods = "Alt", chars = "\u001bf", mode = "~Vi|~Search" },
+    { key = "Е", mods = "Alt", chars = "\u001bt", mode = "~Vi|~Search" },
+    { key = "С", mods = "Alt", chars = "\u001bc", mode = "~Vi|~Search" },
+    { key = "Г", mods = "Alt", chars = "\u001bu", mode = "~Vi|~Search" },
+    { key = "Д", mods = "Alt", chars = "\u001bl", mode = "~Vi|~Search" },
+    { key = "Н", mods = "Alt", chars = "\u001by", mode = "~Vi|~Search" },
+]

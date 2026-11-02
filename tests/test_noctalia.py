@@ -17,6 +17,37 @@ spec.loader.exec_module(n)
 
 
 class NoctaliaInstallerTests(unittest.TestCase):
+    def test_media_defaults_preserve_other_apps_and_are_idempotent(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); config = root / 'config'; data = root / 'data'
+            config.mkdir(); (data / 'applications').mkdir(parents=True)
+            target = config / 'mimeapps.list'
+            original = '[Default Applications]\napplication/pdf=reader.desktop;\nimage/jpeg=old.desktop;\n[Added Associations]\nimage/jpeg=old.desktop;\n'
+            target.write_text(original)
+            for desktop, types in [('vlc.desktop', 'video/mp4;audio/mpeg;'),
+                                   ('org.gnome.Loupe.desktop', 'image/jpeg;image/png;')]:
+                (data / 'applications' / desktop).write_text('[Desktop Entry]\nMimeType=' + types)
+            n.snapshot(root / 'backup', [target])
+            with patch.dict(os.environ, {'XDG_DATA_DIRS': str(data)}):
+                n.default_apps(config, data)
+                first = target.read_text()
+                n.default_apps(config, data)
+            self.assertEqual(target.read_text(), first)
+            self.assertIn('application/pdf=reader.desktop;', first)
+            self.assertIn('video/mp4=vlc.desktop;', first)
+            self.assertIn('image/jpeg=org.gnome.Loupe.desktop;old.desktop;', first)
+            self.assertNotIn('audio/mpeg=', first)
+            n.restore_files(root / 'backup', [target])
+            self.assertEqual(target.read_text(), original)
+
+    def test_missing_media_app_does_not_write_associations(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with patch.dict(os.environ, {'XDG_DATA_DIRS': temp}):
+                with self.assertRaisesRegex(RuntimeError, 'vlc.desktop'):
+                    n.default_apps(root, root)
+            self.assertFalse((root / 'mimeapps.list').exists())
+
     def test_backup_restores_contents_modes_and_absent_files(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -115,14 +146,18 @@ class NoctaliaInstallerTests(unittest.TestCase):
             root = Path(temp); config = root / 'config'; state = root / 'state'; binary = root / 'bin'
             existing = config / 'noctalia/config.toml'; existing.parent.mkdir(parents=True)
             existing.write_text('original')
+            mime = config / 'mimeapps.list'; mime.write_text('original mime associations')
             image = root / 'image'; image.write_bytes(b'\xff\xd8\xffimage')
             with patch.object(n, 'user_paths', return_value=(config, state, binary, root / 'data')), \
                  patch.object(n.os, 'geteuid', return_value=1000), \
                  patch('sys.argv', ['script', '--desktop-only', '--skip-packages', '--wallpaper', str(image)]), \
                  patch.object(n, 'validate'), patch.object(n, 'run', side_effect=RuntimeError('daemon failed')), \
+                 patch.object(n, 'default_apps', side_effect=lambda config, data: mime.write_text('changed')), \
                  contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaisesRegex(RuntimeError, 'daemon failed'): n.main()
             self.assertEqual(existing.read_text(), 'original')
+            self.assertEqual(mime.read_text(), 'original mime associations')
+            self.assertFalse((config / 'alacritty/alacritty.toml').exists())
             self.assertFalse((config / 'niri/config.kdl').exists())
             self.assertFalse((binary / 'niri-show-desktop').exists())
 

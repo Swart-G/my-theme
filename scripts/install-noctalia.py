@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Independent Niri/Noctalia installer; privileged operations use fixed paths."""
 import argparse
+import configparser
 import datetime
 import fcntl
 import hashlib
@@ -21,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'noctalia'
 WALLPAPER_URL = 'https://raw.githubusercontent.com/orangci/walls/master/train-station.jpg'
 WALLPAPER_SHA256 = '29d0626d45b607f85b617e11987a7c645c5d1214276b2ed9c59bf2452ec59995'
-PACKAGES = ['niri', 'noctalia', 'alacritty', 'Thunar', 'playerctl', 'brightnessctl',
+PACKAGES = ['niri', 'noctalia', 'alacritty', 'fish', 'vlc', 'loupe', 'Thunar', 'playerctl', 'brightnessctl',
             'wireplumber', 'xwayland-satellite', 'xdg-desktop-portal-gnome',
             'adwaita-sans-fonts', 'source-foundry-hack-fonts', 'breeze-cursor-theme',
             'breeze-icon-theme', 'libnotify', 'dbus', 'polkit', 'glibc-langpack-ru',
@@ -70,7 +71,8 @@ def user_paths():
 def files_for_user(config, state, binary, data):
     result = {ASSETS / 'niri' / name: config / 'niri' / name for name in
               ('config.kdl', 'basicsettings.kdl', 'keybinds.kdl', 'alacritty.toml', 'super-tap.py')}
-    result.update({ASSETS / 'shell/config.toml': config / 'noctalia/config.toml',
+    result.update({ASSETS / 'alacritty.toml': config / 'alacritty/alacritty.toml',
+                   ASSETS / 'shell/config.toml': config / 'noctalia/config.toml',
                    ASSETS / 'shell/settings.toml': state / 'noctalia/settings.toml',
                    ASSETS / 'shell/noctalia.service': config / 'systemd/user/noctalia.service',
                    ASSETS / 'shell/niri-super-tap.service': config / 'systemd/user/niri-super-tap.service',
@@ -88,6 +90,39 @@ def files_for_user(config, state, binary, data):
         for name in ('gtk.css', 'colors.css'):
             result[ASSETS / 'gtk' / version / name] = config / version / name
     return result
+
+
+def default_apps(config, data):
+    """Merge media defaults while retaining unrelated MIME associations."""
+    def ini():
+        parser = configparser.ConfigParser(interpolation=None, strict=False)
+        parser.optionxform = str
+        return parser
+
+    target = config / 'mimeapps.list'
+    associations = ini()
+    associations.read(target)
+    directories = [data, *map(Path, os.environ.get(
+        'XDG_DATA_DIRS', '/usr/local/share:/usr/share').split(':'))]
+    for desktop, prefix in [('vlc.desktop', 'video/'), ('org.gnome.Loupe.desktop', 'image/')]:
+        source = next((directory / 'applications' / desktop for directory in directories
+                       if (directory / 'applications' / desktop).is_file()), None)
+        if source is None:
+            raise RuntimeError('Не найдено приложение: ' + desktop + '. Установите VLC и Loupe.')
+        entry = ini()
+        entry.read(source)
+        types = [mime for mime in entry['Desktop Entry']['MimeType'].split(';')
+                 if mime.startswith(prefix)]
+        for section in ('Default Applications', 'Added Associations'):
+            if not associations.has_section(section):
+                associations.add_section(section)
+            for mime in types:
+                previous = associations[section].get(mime, '').split(';')
+                apps = [desktop] + [app for app in previous if app and app != desktop]
+                associations[section][mime] = ';'.join(apps) + ';'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open('w') as stream:
+        associations.write(stream, space_around_delimiters=False)
 
 
 def refuse_links(path):
@@ -291,6 +326,7 @@ def validate(stage):
     # Noctalia validates config.toml; runtime overrides must also parse as TOML.
     tomllib.loads((stage / 'shell/settings.toml').read_text())
     tomllib.loads((stage / 'greeter.toml').read_text())
+    tomllib.loads((stage / 'niri/alacritty.toml').read_text())
 
 
 def stage_files(stage, config, binary, username, scale, image):
@@ -341,7 +377,7 @@ def main():
     project_state = state / 'rodip-noctalia'
     files = files_for_user(config, state, binary, data)
     image_target = config / 'niri/wallpaper-city.jpg'
-    managed = [*files.values(), image_target]
+    managed = [*files.values(), image_target, config / 'mimeapps.list']
     if args.dry_run:
         if args.restore:
             print('Откат ' + args.restore + '; пользовательские копии: ' + str(project_state / 'backups'))
@@ -349,6 +385,7 @@ def main():
             return
         print('Niri + Noctalia: ' + ', '.join(str(p) for p in managed if not p.is_relative_to(data)))
         print('GTK Lavanda-Sea: ' + str(data / 'themes/Lavanda-Sea'))
+        print('Приложения по умолчанию: видео — VLC, изображения — Loupe; Alacritty — fish, US/RU.')
         print('Обои: ' + (str(args.wallpaper) if args.wallpaper else WALLPAPER_URL + ' (SHA256 проверяется)'))
         print('Пакеты Fedora: ' + ('пропущены' if args.skip_packages else ', '.join(PACKAGES)))
         print('Экран входа: ' + ('пропущен' if args.desktop_only else 'greetd + Noctalia Greeter, Terra только для noctalia-greeter'))
@@ -394,6 +431,7 @@ def main():
                         target.write_text(render(source.read_text(), config, binary, username, args.scale))
                     target.chmod(0o755 if source.parent.name == 'bin' else 0o644)
                 shutil.copyfile(stage / 'wallpaper', image_target)
+                default_apps(config, data)
                 if not args.desktop_only:
                     try:
                         elevated(['--system-install', stage, '--user', username, '--scale', args.scale,
