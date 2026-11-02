@@ -25,7 +25,7 @@ PACKAGES = ['niri', 'noctalia', 'alacritty', 'Thunar', 'playerctl', 'brightnessc
             'wireplumber', 'xwayland-satellite', 'xdg-desktop-portal-gnome',
             'adwaita-sans-fonts', 'source-foundry-hack-fonts', 'breeze-cursor-theme',
             'breeze-icon-theme', 'libnotify', 'dbus', 'polkit', 'glibc-langpack-ru',
-            'google-noto-sans-fonts']
+            'google-noto-sans-fonts', 'python3-evdev', 'xdg-desktop-portal-gtk']
 SYSTEM_PATHS = [Path(p) for p in (
     '/etc/greetd/config.toml', '/var/lib/noctalia-greeter/greeter.toml',
     '/var/lib/noctalia-greeter/sync.toml',
@@ -69,10 +69,13 @@ def user_paths():
 
 def files_for_user(config, state, binary, data):
     result = {ASSETS / 'niri' / name: config / 'niri' / name for name in
-              ('config.kdl', 'basicsettings.kdl', 'keybinds.kdl', 'alacritty.toml')}
+              ('config.kdl', 'basicsettings.kdl', 'keybinds.kdl', 'alacritty.toml', 'super-tap.py')}
     result.update({ASSETS / 'shell/config.toml': config / 'noctalia/config.toml',
                    ASSETS / 'shell/settings.toml': state / 'noctalia/settings.toml',
-                   ASSETS / 'shell/noctalia.service': config / 'systemd/user/noctalia.service'})
+                   ASSETS / 'shell/noctalia.service': config / 'systemd/user/noctalia.service',
+                   ASSETS / 'shell/niri-super-tap.service': config / 'systemd/user/niri-super-tap.service',
+                   ASSETS / 'shell/meta-wheel-niri.conf': config / 'systemd/user/meta-wheel-desktops.service.d/niri.conf',
+                   ASSETS / 'shell/niri-portals.conf': config / 'xdg-desktop-portal/niri-portals.conf'})
     result.update({ASSETS / 'bin' / name: binary / name for name in
                    ('niri-show-desktop', 'niri-open-obsidian')})
     theme = ASSETS / 'gtk/Lavanda-Sea'
@@ -294,6 +297,8 @@ def stage_files(stage, config, binary, username, scale, image):
     for folder in ('niri', 'shell', 'bin'):
         (stage / folder).mkdir(parents=True)
         for source in (ASSETS / folder).iterdir():
+            if not source.is_file():
+                continue
             target = stage / folder / source.name
             target.write_text(render(source.read_text(), config, binary, username, scale))
             target.chmod(source.stat().st_mode & 0o777)

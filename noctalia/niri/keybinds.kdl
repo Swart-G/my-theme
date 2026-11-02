@@ -20,7 +20,7 @@ binds {
     Mod+Alt+L { switch-layout "next"; }
     Mod+Q repeat=false hotkey-overlay-title="Закрыть окно" { close-window; }
     Alt+F4 repeat=false { close-window; }
-    Mod+W hotkey-overlay-title="Обзор окон" { toggle-overview; }
+    // Standalone Win release is handled by niri-super-tap.service on Niri 26.04.
     Mod+G { toggle-overview; }
     Ctrl+F9 { toggle-overview; }
     Ctrl+F10 { toggle-overview; }
@@ -33,12 +33,12 @@ binds {
     Mod+R hotkey-overlay-title="Изменить ширину колонки" { switch-preset-column-width; }
     Mod+C { center-column; }
     Mod+Shift+W { toggle-column-tabbed-display; }
-    Mod+Alt+Left { focus-column-left; }
-    Mod+Alt+Right { focus-column-right; }
+    Mod+Alt+Left { focus-column-or-monitor-left; }
+    Mod+Alt+Right { focus-column-or-monitor-right; }
     Mod+Alt+Up { focus-window-up; }
     Mod+Alt+Down { focus-window-down; }
-    Mod+Left { focus-column-left; }
-    Mod+Right { focus-column-right; }
+    Mod+Left { focus-column-or-monitor-left; }
+    Mod+Right { focus-column-or-monitor-right; }
     Mod+Up { focus-workspace-up; }
     Mod+Down { focus-workspace-down; }
     Mod+Ctrl+Left { move-column-left; }
@@ -69,6 +69,12 @@ binds {
     Mod+Shift+4 { move-window-to-workspace 4; }
     Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
     Mod+WheelScrollUp cooldown-ms=150 { focus-workspace-up; }
+    Mod+WheelScrollRight { focus-column-or-monitor-right; }
+    Mod+WheelScrollLeft { focus-column-or-monitor-left; }
+    Mod+TouchpadScrollDown cooldown-ms=150 { focus-workspace-down; }
+    Mod+TouchpadScrollUp cooldown-ms=150 { focus-workspace-up; }
+    Mod+TouchpadScrollRight { focus-column-or-monitor-right; }
+    Mod+TouchpadScrollLeft { focus-column-or-monitor-left; }
     Mod+BracketLeft { consume-or-expel-window-left; }
     Mod+BracketRight { consume-or-expel-window-right; }
     Print repeat=false { spawn "noctalia" "msg" "screenshot-region"; }

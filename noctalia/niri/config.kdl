@@ -39,7 +39,7 @@ cursor {
     xcursor-size 24
     hide-when-typing
 }
-spawn-at-startup "systemctl" "--user" "start" "noctalia.service"
+spawn-at-startup "systemctl" "--user" "start" "noctalia.service" "niri-super-tap.service"
 hotkey-overlay { skip-at-startup; }
 screenshot-path "~/Pictures/Screenshots/Screenshot-%Y-%m-%d-%H-%M-%S.png"
 window-rule {

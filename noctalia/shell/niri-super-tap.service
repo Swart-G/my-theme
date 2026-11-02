@@ -1,0 +1,13 @@
+[Unit]
+Description=Open Niri overview on a standalone Win key release
+BindsTo=niri.service
+PartOf=niri.service
+After=niri.service
+
+[Service]
+ExecStart=/usr/bin/python3 "@CONFIG@/niri/super-tap.py"
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=niri.service
