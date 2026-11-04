@@ -1,7 +1,7 @@
 config_version = 16
 
 [bar.default]
-end = ["tray", "notifications", "network", "volume", "battery", "keyboard_layout"]
+end = ["tray", "bar", "notifications", "network", "volume", "battery", "keyboard_layout"]
 start = ["control-center", "workspaces"]
 widget_spacing = 10
 
@@ -11,3 +11,12 @@ show_events_card = false
 [lockscreen_widgets]
 enabled = false
 schema_version = 2
+
+[plugins]
+enabled = ["raycursive/discord-voice"]
+
+[widget.bar]
+type = "raycursive/discord-voice:bar"
+
+[widget.tray]
+drawer = true

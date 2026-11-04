@@ -1,0 +1,13 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+# Keep the plugin's executable setting usable for native and Flatpak Discord.
+if command -v discord >/dev/null 2>&1; then
+    exec discord "$@"
+fi
+if command -v flatpak >/dev/null 2>&1 && flatpak info com.discordapp.Discord >/dev/null 2>&1; then
+    exec flatpak run com.discordapp.Discord "$@"
+fi
+if command -v notify-send >/dev/null 2>&1; then
+    notify-send Discord 'Установите Discord или Flatpak com.discordapp.Discord.'
+fi
+exit 1

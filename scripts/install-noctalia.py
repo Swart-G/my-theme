@@ -79,9 +79,12 @@ def files_for_user(config, state, binary, data):
                    ASSETS / 'shell/meta-wheel-niri.conf': config / 'systemd/user/meta-wheel-desktops.service.d/niri.conf',
                    ASSETS / 'shell/niri-portals.conf': config / 'xdg-desktop-portal/niri-portals.conf'})
     result.update({ASSETS / 'bin' / name: binary / name for name in
-                   ('niri-show-desktop', 'niri-open-obsidian')})
+                   ('niri-show-desktop', 'niri-open-obsidian', 'niri-open-discord')})
     result[ASSETS / 'kde/org.kde.dolphin.desktop'] = data / 'applications/org.kde.dolphin.desktop'
     result[ASSETS / 'kde/Noctalia.colors'] = data / 'color-schemes/Noctalia.colors'
+    plugins = ASSETS / 'plugins'
+    result.update({p: data / 'noctalia/plugins' / p.relative_to(plugins)
+                   for p in sorted(plugins.rglob('*')) if p.is_file()})
     theme = ASSETS / 'gtk/Lavanda-Sea'
     result.update({p: data / 'themes/Lavanda-Sea' / p.relative_to(theme)
                    for p in sorted(theme.rglob('*')) if p.is_file()})
@@ -409,6 +412,7 @@ def main():
             return
         print('Niri + Noctalia: ' + ', '.join(str(p) for p in managed if not p.is_relative_to(data)))
         print('Dolphin: Noctalia — ' + str(data / 'color-schemes/Noctalia.colors'))
+        print('Discord Voice: локальная версия с исправлением значка; native/Flatpak launcher.')
         print('GTK Lavanda-Sea: ' + str(data / 'themes/Lavanda-Sea'))
         print('Приложения по умолчанию: видео — VLC, изображения — Loupe; Alacritty — fish, US/RU.')
         print('Обои: ' + (str(args.wallpaper) if args.wallpaper else WALLPAPER_URL + ' (SHA256 проверяется)'))
@@ -450,7 +454,8 @@ def main():
             try:
                 for source, target in files.items():
                     target.parent.mkdir(parents=True, exist_ok=True)
-                    if source.is_relative_to(ASSETS / 'gtk/Lavanda-Sea'):
+                    if (source.is_relative_to(ASSETS / 'gtk/Lavanda-Sea')
+                            or source.suffix in ('.png', '.webp')):
                         shutil.copyfile(source, target)
                     else:
                         target.write_text(render(source.read_text(), config, binary, username, args.scale))
