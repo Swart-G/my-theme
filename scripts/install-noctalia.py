@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'noctalia'
 WALLPAPER_URL = 'https://raw.githubusercontent.com/orangci/walls/master/train-station.jpg'
 WALLPAPER_SHA256 = '29d0626d45b607f85b617e11987a7c645c5d1214276b2ed9c59bf2452ec59995'
-PACKAGES = ['niri', 'noctalia', 'alacritty', 'fish', 'vlc', 'loupe', 'Thunar', 'playerctl', 'brightnessctl',
+PACKAGES = ['niri', 'noctalia', 'alacritty', 'fish', 'vlc', 'loupe', 'dolphin', 'playerctl', 'brightnessctl',
             'wireplumber', 'xwayland-satellite', 'xdg-desktop-portal-gnome',
             'adwaita-sans-fonts', 'source-foundry-hack-fonts', 'breeze-cursor-theme',
             'breeze-icon-theme', 'libnotify', 'dbus', 'polkit', 'glibc-langpack-ru',

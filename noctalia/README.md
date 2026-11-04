@@ -14,7 +14,7 @@ bash ./install-noctalia.sh
 
 Полная автоматическая установка рассчитана на Fedora 44 с systemd. Нужны
 Python 3.11+ и сеть. Пакеты и экран входа требуют системной авторизации.
-Устанавливаются Niri, Noctalia, Alacritty, fish, VLC, Loupe, Thunar, шрифты Adwaita Sans/Hack,
+Устанавливаются Niri, Noctalia, Alacritty, fish, VLC, Loupe, Dolphin, шрифты Adwaita Sans/Hack,
 значки и курсоры Breeze, средства управления звуком/яркостью и Wayland-портал.
 Для приложений GTK включена текущая тема Lavanda-Sea и шрифт Noto Sans.
 
@@ -73,7 +73,7 @@ manager отключается от автозагрузки, greetd включ�
 | Meta+L | Блокировка |
 | Meta+Space | Следующая раскладка |
 | Ctrl+Alt+T | Alacritty |
-| Meta+E | Thunar |
+| Meta+E | Dolphin |
 | Meta+D | Пустой рабочий стол / возврат |
 | Win (нажать и отпустить) / Meta+G | Обзор окон |
 | Win+вертикальная прокрутка | Предыдущий / следующий рабочий стол |
@@ -96,7 +96,7 @@ manager отключается от автозагрузки, greetd включ�
 используйте Meta+G или отдельно настройте права устройств ввода.
 
 Файловые диалоги направлены в `xdg-desktop-portal-gtk` через пользовательский
-`xdg-desktop-portal/niri-portals.conf`: установленный Thunar не заменяет Nautilus,
+`xdg-desktop-portal/niri-portals.conf`: установленный Dolphin не заменяет Nautilus,
 который требуется файловому диалогу GNOME. Остальные порталы сохраняют
 приоритет GNOME/GTK, в том числе для демонстрации экрана.
 
