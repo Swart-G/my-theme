@@ -80,6 +80,7 @@ def files_for_user(config, state, binary, data):
                    ASSETS / 'shell/niri-portals.conf': config / 'xdg-desktop-portal/niri-portals.conf'})
     result.update({ASSETS / 'bin' / name: binary / name for name in
                    ('niri-show-desktop', 'niri-open-obsidian')})
+    result[ASSETS / 'kde/Noctalia.colors'] = data / 'color-schemes/Noctalia.colors'
     theme = ASSETS / 'gtk/Lavanda-Sea'
     result.update({p: data / 'themes/Lavanda-Sea' / p.relative_to(theme)
                    for p in sorted(theme.rglob('*')) if p.is_file()})
@@ -123,6 +124,28 @@ def default_apps(config, data):
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open('w') as stream:
         associations.write(stream, space_around_delimiters=False)
+
+
+def dolphin_colors(config):
+    """Select Dolphin's own palette while preserving its other settings verbatim."""
+    target = config / 'dolphinrc'
+    text = target.read_text() if target.exists() else ''
+    lines = text.splitlines(keepends=True)
+    start = next((i for i, line in enumerate(lines) if line.strip() == '[UiSettings]'), None)
+    if start is None:
+        text += ('\n' if text and not text.endswith('\n') else '') + '[UiSettings]\nColorScheme=Noctalia\n'
+    else:
+        end = next((i for i in range(start + 1, len(lines))
+                    if lines[i].lstrip().startswith('[')), len(lines))
+        body = [line for line in lines[start + 1:end]
+                if not re.match(r'^\s*ColorScheme\s*=', line)]
+        if body and not body[-1].endswith('\n'):
+            body[-1] += '\n'
+        if not lines[start].endswith('\n'):
+            lines[start] += '\n'
+        text = ''.join(lines[:start + 1] + body + ['ColorScheme=Noctalia\n'] + lines[end:])
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text)
 
 
 def refuse_links(path):
@@ -377,13 +400,14 @@ def main():
     project_state = state / 'rodip-noctalia'
     files = files_for_user(config, state, binary, data)
     image_target = config / 'niri/wallpaper-city.jpg'
-    managed = [*files.values(), image_target, config / 'mimeapps.list']
+    managed = [*files.values(), image_target, config / 'mimeapps.list', config / 'dolphinrc']
     if args.dry_run:
         if args.restore:
             print('Откат ' + args.restore + '; пользовательские копии: ' + str(project_state / 'backups'))
             print('Системная часть восстанавливается только при наличии квитанции в выбранной копии.')
             return
         print('Niri + Noctalia: ' + ', '.join(str(p) for p in managed if not p.is_relative_to(data)))
+        print('Dolphin: Noctalia — ' + str(data / 'color-schemes/Noctalia.colors'))
         print('GTK Lavanda-Sea: ' + str(data / 'themes/Lavanda-Sea'))
         print('Приложения по умолчанию: видео — VLC, изображения — Loupe; Alacritty — fish, US/RU.')
         print('Обои: ' + (str(args.wallpaper) if args.wallpaper else WALLPAPER_URL + ' (SHA256 проверяется)'))
@@ -432,6 +456,7 @@ def main():
                     target.chmod(0o755 if source.parent.name == 'bin' else 0o644)
                 shutil.copyfile(stage / 'wallpaper', image_target)
                 default_apps(config, data)
+                dolphin_colors(config)
                 if not args.desktop_only:
                     try:
                         elevated(['--system-install', stage, '--user', username, '--scale', args.scale,

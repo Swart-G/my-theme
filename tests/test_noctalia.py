@@ -17,6 +17,37 @@ spec.loader.exec_module(n)
 
 
 class NoctaliaInstallerTests(unittest.TestCase):
+    def test_dolphin_palette_preserves_settings_and_restores(self):
+        for original in ('', '[UiSettings]',
+                         '# keep\n[General]\nShowHiddenFiles=true\n[UiSettings]\nColorScheme=KvArcDark\nOther=true\n[MainWindow]\nMenuBar=Disabled\n'):
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); config = root / 'config'; config.mkdir()
+                target = config / 'dolphinrc'
+                if original:
+                    target.write_text(original)
+                scheme = root / 'data/color-schemes/Noctalia.colors'
+                files = n.files_for_user(config, root / 'state', root / 'bin', root / 'data')
+                self.assertEqual(files[n.ASSETS / 'kde/Noctalia.colors'], scheme)
+                n.snapshot(root / 'backup', [target, scheme])
+                scheme.parent.mkdir(parents=True)
+                scheme.write_text((n.ASSETS / 'kde/Noctalia.colors').read_text())
+                n.dolphin_colors(config)
+                first = target.read_text()
+                n.dolphin_colors(config)
+                self.assertEqual(first, target.read_text())
+                self.assertIn('ColorScheme=Noctalia\n', first)
+                self.assertNotIn('KvArcDark', first)
+                if 'Other=true' in original:
+                    self.assertIn('Other=true\n', first)
+                    self.assertIn('[MainWindow]\nMenuBar=Disabled\n', first)
+                    self.assertTrue(first.startswith('# keep\n[General]\nShowHiddenFiles=true\n'))
+                n.restore_files(root / 'backup', [target, scheme])
+                self.assertFalse(scheme.exists())
+                if original:
+                    self.assertEqual(target.read_text(), original)
+                else:
+                    self.assertFalse(target.exists())
+
     def test_media_defaults_preserve_other_apps_and_are_idempotent(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); config = root / 'config'; data = root / 'data'
