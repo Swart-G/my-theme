@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=Dolphin
+GenericName=File Manager
+GenericName[ru]=Диспетчер файлов
+Comment=Manage files and folders
+Comment[ru]=Управление файлами и папками
+Exec=dolphin -platformtheme kde %u
+Icon=system-file-manager
+Terminal=false
+Categories=Qt;KDE;System;FileTools;FileManager;
+MimeType=inode/directory;
+StartupNotify=true
+StartupWMClass=dolphin
+X-DBUS-ServiceName=org.kde.dolphin
+X-KDE-Shortcuts=Meta+E

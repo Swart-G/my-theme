@@ -17,6 +17,30 @@ spec.loader.exec_module(n)
 
 
 class NoctaliaInstallerTests(unittest.TestCase):
+    def test_dolphin_text_contrast_and_startup_integration(self):
+        palette = n.configparser.ConfigParser()
+        palette.read(n.ASSETS / 'kde/Noctalia.colors')
+
+        def luminance(value):
+            channels = [int(v) / 255 for v in value.split(',')]
+            linear = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+                      for v in channels]
+            return sum(v * weight for v, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+        for section in palette.sections():
+            if section.startswith('Colors:'):
+                for foreground in ('ForegroundNormal', 'ForegroundInactive'):
+                    for background in ('BackgroundNormal', 'BackgroundAlternate'):
+                        a, b = sorted((luminance(palette[section][foreground]),
+                                       luminance(palette[section][background])))
+                        self.assertGreaterEqual((b + 0.05) / (a + 0.05), 4.5,
+                                                (section, foreground, background))
+        self.assertIn('"dolphin" "-platformtheme" "kde"',
+                      (n.ASSETS / 'niri/keybinds.kdl').read_text())
+        self.assertIn('Exec=dolphin -platformtheme kde %u',
+                      (n.ASSETS / 'kde/org.kde.dolphin.desktop').read_text())
+        self.assertIn('plasma-integration', n.PACKAGES)
+
     def test_dolphin_palette_preserves_settings_and_restores(self):
         for original in ('', '[UiSettings]',
                          '# keep\n[General]\nShowHiddenFiles=true\n[UiSettings]\nColorScheme=KvArcDark\nOther=true\n[MainWindow]\nMenuBar=Disabled\n'):

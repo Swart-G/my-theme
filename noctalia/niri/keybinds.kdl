@@ -13,7 +13,7 @@ binds {
     Mod+B repeat=false hotkey-overlay-title="Браузер" { spawn "google-chrome-stable"; }
     Mod+O repeat=false hotkey-overlay-title="Obsidian" { spawn "@BIN@/niri-open-obsidian"; }
     Ctrl+Alt+T repeat=false hotkey-overlay-title="Терминал" { spawn "alacritty" "--config-file" "@CONFIG@/niri/alacritty.toml"; }
-    Mod+E repeat=false hotkey-overlay-title="Файлы" { spawn "dolphin"; }
+    Mod+E repeat=false hotkey-overlay-title="Файлы" { spawn "dolphin" "-platformtheme" "kde"; }
     Mod+V repeat=false hotkey-overlay-title="История буфера" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
     Mod+Shift+K repeat=false hotkey-overlay-title="Центр управления" { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
     Mod+L repeat=false hotkey-overlay-title="Блокировка" { spawn "noctalia" "msg" "session" "lock"; }

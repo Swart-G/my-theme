@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'noctalia'
 WALLPAPER_URL = 'https://raw.githubusercontent.com/orangci/walls/master/train-station.jpg'
 WALLPAPER_SHA256 = '29d0626d45b607f85b617e11987a7c645c5d1214276b2ed9c59bf2452ec59995'
-PACKAGES = ['niri', 'noctalia', 'alacritty', 'fish', 'vlc', 'loupe', 'dolphin', 'playerctl', 'brightnessctl',
+PACKAGES = ['niri', 'noctalia', 'alacritty', 'fish', 'vlc', 'loupe', 'dolphin', 'plasma-integration', 'playerctl', 'brightnessctl',
             'wireplumber', 'xwayland-satellite', 'xdg-desktop-portal-gnome',
             'adwaita-sans-fonts', 'source-foundry-hack-fonts', 'breeze-cursor-theme',
             'breeze-icon-theme', 'libnotify', 'dbus', 'polkit', 'glibc-langpack-ru',
@@ -80,6 +80,7 @@ def files_for_user(config, state, binary, data):
                    ASSETS / 'shell/niri-portals.conf': config / 'xdg-desktop-portal/niri-portals.conf'})
     result.update({ASSETS / 'bin' / name: binary / name for name in
                    ('niri-show-desktop', 'niri-open-obsidian')})
+    result[ASSETS / 'kde/org.kde.dolphin.desktop'] = data / 'applications/org.kde.dolphin.desktop'
     result[ASSETS / 'kde/Noctalia.colors'] = data / 'color-schemes/Noctalia.colors'
     theme = ASSETS / 'gtk/Lavanda-Sea'
     result.update({p: data / 'themes/Lavanda-Sea' / p.relative_to(theme)
