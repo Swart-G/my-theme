@@ -56,17 +56,6 @@ window-rule {
     match app-id="^org.kde.kcalc$"
     open-floating true
 }
-window-rule {
-    match app-id="^xwaylandvideobridge$"
-    open-floating true
-    opacity 0.0
-    min-width 1
-    max-width 1
-    min-height 1
-    max-height 1
-    focus-ring { off; }
-    shadow { off; }
-}
 recent-windows {
     highlight { active-color "#a6c8ff"; corner-radius 14; padding 16; }
     previews { max-height 320; }

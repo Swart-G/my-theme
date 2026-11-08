@@ -16,6 +16,44 @@ launcher_position = "center"
 [theme]
 mode = "dark"
 
+# Pin the current notification appearance instead of relying on built-in defaults.
+[notification]
+enable_daemon = true
+position = "top_right"
+layer = "top"
+width = 360
+scale = 1.0
+offset_x = 20
+offset_y = 8
+background_opacity = 0.97
+border = true
+border_color = "outline_variant"
+border_width = 1.0
+show_actions = true
+show_app_name = true
+follow_focused_output = false
+monitors = []
+max_visible = 0
+collapse_on_dismiss = true
+keep_dismissed_in_history = true
+history_retention_hours = 0
+
+[osd]
+enabled = true
+position = "top_center"
+position_vertical = "top_center"
+orientation = "horizontal"
+scale = 1.0
+offset_x = 20
+offset_y = 8
+background_opacity = 0.97
+border = true
+border_color = "outline_variant"
+border_width = 1.0
+hide_delay_ms = 1400
+follow_focused_output = false
+monitors = []
+
 [bar.default]
 position = "left"
 thickness = 48

@@ -78,6 +78,8 @@ def files_for_user(config, state, binary, data):
                    ASSETS / 'shell/niri-super-tap.service': config / 'systemd/user/niri-super-tap.service',
                    ASSETS / 'shell/meta-wheel-niri.conf': config / 'systemd/user/meta-wheel-desktops.service.d/niri.conf',
                    ASSETS / 'shell/niri-portals.conf': config / 'xdg-desktop-portal/niri-portals.conf'})
+    result[ASSETS / 'shell/org.kde.xwaylandvideobridge.desktop'] = (
+        config / 'autostart/org.kde.xwaylandvideobridge.desktop')
     result.update({ASSETS / 'bin' / name: binary / name for name in
                    ('niri-show-desktop', 'niri-open-obsidian', 'niri-open-discord')})
     result[ASSETS / 'kde/org.kde.dolphin.desktop'] = data / 'applications/org.kde.dolphin.desktop'
@@ -413,6 +415,7 @@ def main():
         print('Niri + Noctalia: ' + ', '.join(str(p) for p in managed if not p.is_relative_to(data)))
         print('Dolphin: Noctalia — ' + str(data / 'color-schemes/Noctalia.colors'))
         print('Discord Voice: локальная версия с исправлением значка; native/Flatpak launcher.')
+        print('Уведомления: справа сверху, ширина 360, непрозрачность 97%, рамка 1; OSD — сверху по центру.')
         print('GTK Lavanda-Sea: ' + str(data / 'themes/Lavanda-Sea'))
         print('Приложения по умолчанию: видео — VLC, изображения — Loupe; Alacritty — fish, US/RU.')
         print('Обои: ' + (str(args.wallpaper) if args.wallpaper else WALLPAPER_URL + ' (SHA256 проверяется)'))
